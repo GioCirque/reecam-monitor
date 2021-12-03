@@ -64,3 +64,12 @@ For monitoring ReeCam and SoSoCam IP camera devices on a local network.
 
    This will start monitoring and producing event related content from camera alarm periods.
 
+7. `yarn serve`
+
+   This will start the monitor and local web server on port `8080`. You can navigate to the web app using `http://localhost:8080/app` in a browser or access the API at `http://localhost:8080/api`
+
+
+8. `yarn start`
+
+   This will start the monitor and local web server on port `8080` in a docker container, using the `docker-compose.yml` file. You can navigate to the web app using `http://localhost:8080/app` in a browser or access the API at `http://localhost:8080/api`
+

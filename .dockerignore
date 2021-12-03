@@ -1,0 +1,10 @@
+Dockerfile
+node_modules
+.ipcams
+.jest
+.vscode
+.git
+.env
+.eslint
+.gitignore
+.nvmrc

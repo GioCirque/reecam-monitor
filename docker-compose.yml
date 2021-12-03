@@ -1,0 +1,13 @@
+version: '3.9'
+services:
+  reecam-web:
+    container_name: reecam-web
+    network_mode: bridge
+    restart: always
+    ports:
+      - '8080:8080'
+    volumes:
+      - ./.ipcams:/reecam/.ipcams:rw
+    build:
+      context: .
+      dockerfile: Dockerfile

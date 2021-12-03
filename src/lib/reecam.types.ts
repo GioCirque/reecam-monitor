@@ -31,6 +31,10 @@ export type IPCamOptions = {
    */
   ip: string;
   /**
+   * The friendly name of the camera
+   */
+  alias: string;
+  /**
    * The camera credentials
    */
   credentials: { user: string; pwd: string };
