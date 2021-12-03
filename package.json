@@ -1,11 +1,11 @@
 {
   "name": "ipcams",
   "version": "1.0.0",
-  "description": "A monitor for interesting IP cameras",
+  "description": "A monitor and web portal for interesting IP cameras",
   "author": "Gio Palacino <gio@palacino.net>",
   "license": "CC0-1.0",
   "scripts": {
-    "push": "docker push giocirque/reecam-web:latest",
+    "push": "docker push --all-tags giocirque/reecam-web",
     "build": "docker build --pull --rm -f Dockerfile -t giocirque/reecam-web:latest -t giocirque/reecam-web:$(git rev-parse --short HEAD) .",
     "start": "docker compose up --build --detach",
     "serve": "ts-node ./src/server/serve.ts"
