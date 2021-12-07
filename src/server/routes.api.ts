@@ -4,7 +4,7 @@ import { Config } from '../lib/config';
 import { deleteCamEvent, getCamEventAsset, getCamEventAssetPath, getCamsList, getCamSnapshot } from './api';
 
 export const registerApi = (app: express.Application): express.Application => {
-  app
+  return app
     .use(express.json())
     .get('/api', (req, res) => {
       res.json({ time: Date.now() });
@@ -111,6 +111,4 @@ export const registerApi = (app: express.Application): express.Application => {
         res.sendStatus(403);
       }
     });
-
-  return app;
 };
