@@ -4,13 +4,21 @@ import { RequestHandler } from 'express';
 import { ConfigUser } from '../lib/config.types';
 import { Config } from '../lib/config';
 
-const ALLOW_ANON_PATHS = ['/api/login', '/app', '/'];
+const ALLOW_ANON_PATHS: (string | RegExp)[] = ['/api/login', /\/static\/.*/i, '/app', '/'];
 
 export const validateUser: RequestHandler = (req, res, next) => {
   let email = 'anon';
 
   try {
-    if (ALLOW_ANON_PATHS.includes(req.path.toLowerCase())) return next();
+    const lowerPath = req.path.toLowerCase();
+    const canAnon =
+      ALLOW_ANON_PATHS.findIndex((rule) => {
+        if (typeof rule === 'string') {
+          return lowerPath === rule;
+        }
+        return rule.test(lowerPath);
+      }) >= 0;
+    if (canAnon) return next();
 
     const token: string = req.cookies?.token;
     if (!token) return res.sendStatus(403).end();

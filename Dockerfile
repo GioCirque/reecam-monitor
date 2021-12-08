@@ -21,11 +21,11 @@ RUN mkdir -p /reecam/.ipcams
 
 # Install base with yarn
 WORKDIR /reecam
-RUN yarn install --network-timeout 100000
+RUN yarn install --production --network-timeout 100000
 
 # Install app with yarn
 WORKDIR /reecam/src/app
-RUN yarn install --network-timeout 100000
+RUN yarn install --production --network-timeout 100000
 RUN yarn build
 
 # Ditch all the things we don't need for running
