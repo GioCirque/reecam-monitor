@@ -19,7 +19,7 @@ function safeStopMonitor() {
   }
   if (monitor) {
     console.log();
-    monitor.stop(true);
+    monitor.stop();
   }
 }
 

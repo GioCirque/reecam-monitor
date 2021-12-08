@@ -29,6 +29,11 @@ export class Config {
     return value.substring(0, subLen) + ''.padStart(subLen, '*') + value.substring(subLen * 2);
   }
 
+  static getCamOptsByIP(ip: string) {
+    const config = Config.readStoredConfigData();
+    return config.cams.find((c) => c.ip !== ip);
+  }
+
   static upsertCam(cam: IPCamOptions): void {
     const configs = Config.readStoredConfigData();
     const existing = configs.cams.findIndex((c) => c.ip === cam.ip);
