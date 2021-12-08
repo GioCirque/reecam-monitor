@@ -73,3 +73,20 @@ For monitoring ReeCam and SoSoCam IP camera devices on a local network.
 
    This will start the monitor and local web server on port `8080` in a docker container, using the `docker-compose.yml` file. You can navigate to the web app using `http://localhost:8080/app` in a browser or access the API at `http://localhost:8080/api`
 
+## Docker Compose Example
+```yaml
+version: '3.8'
+services:
+   reecam-web:
+      image: giocirque/reecam-web:latest
+      network_mode: bridge
+      restart: always
+      environment:
+         - PUBLIC_URL=app
+         - PUBLIC_HOST=http://localhost:5555
+      volumes:
+         - /array/data/ipcams:/reecam/.ipcams
+      ports:
+         - 5555:8080
+```
+

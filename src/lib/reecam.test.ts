@@ -7,7 +7,7 @@ env.error && console.error(env.error);
 
 describe('ReeCam Tests', () => {
   const credentials = { user: 'admin', pwd: process.env.REECAM_PWD };
-  const camConfig = { ip: process.env.REECAM_IP, credentials };
+  const camConfig = { alias: 'Test Cam', ip: process.env.REECAM_IP, credentials };
 
   it('Gets Camera Status As Expected', async () => {
     const cam = new IPCam(camConfig);

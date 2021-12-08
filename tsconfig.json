@@ -3,11 +3,12 @@
     "module": "commonjs",
     "target": "ES2021",
     "lib": [
+      "DOM",
       "ES2021"
     ],
     "noImplicitAny": true,
     "sourceMap": true,
-    "outDir": "dist",
+    "outDir": "build",
     "baseUrl": ".",
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
@@ -16,5 +17,11 @@
   "include": [
     "src/**/*",
     "./package.json"
+  ],
+  "exclude": [
+    "@types/*",
+    "node_modules",
+    "src/app",
+    "**/*.test.ts"
   ]
 }

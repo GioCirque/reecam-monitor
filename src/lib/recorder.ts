@@ -94,7 +94,7 @@ export class IPCamRecorder {
       }
       return smaller;
     });
-    this.giffer.addFrame(image.bitmap.data);
+    this.giffer.addFrame(image.bitmap.data as any);
     await this.maybeFinalizeGif();
   }
 

@@ -10,6 +10,7 @@ import {
   IconButton,
   FormHelperText,
   Divider,
+  TextField,
 } from '@mui/material';
 import { Navigate, useLocation } from 'react-router-dom';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
@@ -88,32 +89,28 @@ function AuthPage(props: Props) {
                 <img src={logo} style={{ height: 120 }} alt='logo' />
               </Grid>
               <Grid item xs={12}>
-                <FormControl fullWidth variant='outlined'>
-                  <InputLabel htmlFor='mail'>Email address</InputLabel>
-                  <OutlinedInput
-                    id='mail'
-                    value={values.mail}
-                    onChange={handleChange('mail')}
-                    autoComplete='email'
-                    autoFocus
-                    error={values.mail !== '' && !isValidMail(values.mail)}
-                    aria-describedby='filled-weight-helper-text'
-                    inputProps={{
-                      'aria-label': 'weight',
-                    }}
-                  />
-                  {values.mail !== '' && !isValidMail(values.mail) && (
-                    <FormHelperText error variant='outlined'>
-                      Please enter valid email address
-                    </FormHelperText>
-                  )}
-                </FormControl>
+                <TextField
+                  id='mail'
+                  fullWidth
+                  autoFocus
+                  variant='outlined'
+                  autoComplete='email'
+                  value={values.mail}
+                  label='Email address'
+                  onChange={handleChange('mail')}
+                  aria-describedby='filled-weight-helper-text'
+                  error={values.mail !== '' && !isValidMail(values.mail)}
+                  inputProps={{
+                    'aria-label': 'weight',
+                  }}
+                />
               </Grid>
               <Grid item xs={12}>
                 <FormControl fullWidth variant='outlined' className='textField'>
                   <InputLabel htmlFor='password'>Password</InputLabel>
                   <OutlinedInput
                     id='password'
+                    label='Password'
                     type={values.showPassword ? 'text' : 'password'}
                     value={values.password}
                     autoComplete='current-password'

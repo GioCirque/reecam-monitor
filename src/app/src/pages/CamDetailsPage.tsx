@@ -2,27 +2,15 @@ import { connect } from 'react-redux';
 import React, { useState } from 'react';
 import APIActions from '../redux/apiRedux';
 import MessageActions from '../redux/messageRedux';
-import { createStyles, makeStyles } from '@mui/styles';
-import { Navigate, useParams, useNavigate } from 'react-router-dom';
-import { Theme, Grid, Typography, Breadcrumbs, Link, Modal, Box } from '@mui/material';
+import { Navigate, useParams } from 'react-router-dom';
+import { Grid, Typography, Modal, Box } from '@mui/material';
 import { Home as HomeIcon, Camera as CameraIcon, CameraIndoor as CamIcon } from '@mui/icons-material';
 
-import { AppData, AppUser, IPCamEvent } from '../types';
-import Page from '../components/Layout/Page';
 import CamEventsList from '../components/CamEventsList';
+import { AppData, AppUser, IPCamEvent } from '../types';
 import { ConfirmDelete } from '../components/ConfirmDelete';
-
-const useStyles = makeStyles((theme: Theme) =>
-  createStyles({
-    breadcrumbs: {
-      height: 50,
-      backgroundColor: theme.palette.background.paper,
-    },
-    breadcrumbLink: {
-      cursor: 'pointer',
-    },
-  })
-);
+import Page, { BreadcrumbDef } from '../components/Layout/Page';
+import { getBasename } from '../utils/functions';
 
 const modalStyle = {
   position: 'absolute' as 'absolute',
@@ -51,10 +39,7 @@ type DeleteState = {
 };
 
 function CamDetailsPage(props: Props) {
-  const classes = useStyles();
   const { alias } = useParams();
-  const navigate = useNavigate();
-
   const [streamEvent, setStreamEvent] = useState<IPCamEvent | null>(null);
   const [deleteState, setDeleteState] = useState<DeleteState | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -96,32 +81,14 @@ function CamDetailsPage(props: Props) {
     setDeleteState((p) => null);
   };
 
+  const breadcrumbs: BreadcrumbDef = [
+    { name: 'Home', href: `${getBasename()}/`, icon: <HomeIcon sx={{ mr: 0.5 }} fontSize='inherit' /> },
+    { name: 'Cams', href: `${getBasename()}/cams`, icon: <CameraIcon sx={{ mr: 0.5 }} fontSize='inherit' /> },
+    { name: alias?.replace('-', ' ') || 'Invalid Camera', icon: <CamIcon sx={{ mr: 0.5 }} fontSize='inherit' /> },
+  ];
+
   return (
-    <Page>
-      <Breadcrumbs className={classes.breadcrumbs} aria-label='breadcrumbs'>
-        <Link
-          color='inherit'
-          underline='hover'
-          className={classes.breadcrumbLink}
-          sx={{ display: 'flex', alignItems: 'center' }}
-          onClick={() => navigate('/')}>
-          <HomeIcon sx={{ mr: 0.5 }} fontSize='inherit' />
-          Home
-        </Link>
-        <Link
-          color='inherit'
-          underline='hover'
-          className={classes.breadcrumbLink}
-          sx={{ display: 'flex', alignItems: 'center' }}
-          onClick={() => navigate('/cams')}>
-          <CameraIcon sx={{ mr: 0.5 }} fontSize='inherit' />
-          Cams
-        </Link>
-        <Typography sx={{ display: 'flex', alignItems: 'center' }} color='text.primary'>
-          <CamIcon sx={{ mr: 0.5 }} fontSize='inherit' />
-          {alias?.replace('-', ' ') || 'Invalid Camera'}
-        </Typography>
-      </Breadcrumbs>
+    <Page breadcrumbs={breadcrumbs}>
       {cam && (
         <Grid container item justifyContent='center'>
           <CamEventsList onDelete={onDeleteRequested} onStream={handleOnStream} cam={cam} />

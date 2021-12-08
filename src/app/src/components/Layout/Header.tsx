@@ -51,15 +51,16 @@ function Header(props: Props) {
     } else {
       return (
         <div>
-          <IconButton
-            aria-label='account of current user'
-            aria-controls='menu-appbar'
+          <Button
+            variant='text'
+            color='inherit'
             aria-haspopup='true'
             onClick={handleUserMenu}
-            color='inherit'>
-            {props.user.alias}&nbsp;
-            <AccountCircle />
-          </IconButton>
+            aria-controls='menu-appbar'
+            aria-label='account of current user'
+            endIcon={<AccountCircle />}>
+            {props.user.alias}
+          </Button>
           <Menu
             id='menu-appbar'
             anchorEl={anchorEl}

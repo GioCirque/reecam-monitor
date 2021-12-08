@@ -2,11 +2,13 @@ import React from 'react';
 import { Typography, Breadcrumbs, Link, Grid, Box } from '@mui/material';
 import useMobileService from '../../utils/mobileService';
 
+export type BreadcrumbDef = { name: string; href?: string; icon?: JSX.Element }[];
+
 type Props = {
   children: React.ReactNode;
   title?: React.ReactNode;
   showTitleOnMobile?: boolean;
-  breadcrumbs?: { name: string; href?: string }[];
+  breadcrumbs?: BreadcrumbDef;
   className?: string;
 };
 
@@ -24,16 +26,18 @@ export default function Page(props: Props) {
           </Grid>
           <Grid item>
             {breadcrumbs && (
-              <Breadcrumbs maxItems={2} aria-label='breadcrumb'>
-                {breadcrumbs.map(({ name, href }, index) =>
-                  index < breadcrumbs.length - 1 ? (
-                    <Link color='inherit' href={href}>
+              <Breadcrumbs maxItems={3} aria-label='breadcrumb' style={{ minHeight: 36 }}>
+                {breadcrumbs.map(({ name, href }, index) => {
+                  return index < breadcrumbs.length - 1 ? (
+                    <Link key={`${name}-${index}`} color='inherit' href={href}>
                       {name}
                     </Link>
                   ) : (
-                    <Typography color='textPrimary'>{name}</Typography>
-                  )
-                )}
+                    <Typography key={`${name}-${index}`} color='textPrimary'>
+                      {name}
+                    </Typography>
+                  );
+                })}
               </Breadcrumbs>
             )}
           </Grid>
