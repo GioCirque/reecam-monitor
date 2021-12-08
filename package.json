@@ -6,10 +6,11 @@
   "license": "CC0-1.0",
   "scripts": {
     "docker": "yarn build && yarn docker:build",
-    "build": "webpack && yarn --cwd ./src/app build && mkdir -p ./build/app/build/ && mv -f ./src/app/build ./build/app/",
+    "build": "rm -rf ./build && webpack && yarn --cwd ./src/app build && yarn move:app",
     "serve": "ts-node ./src/server/serve.ts",
-    "start": "docker compose up --build --detach",
-    "docker:push": "docker push --all-tags giocirque/reecam-web",
+    "start": "yarn build && docker compose up --build --detach",
+    "move:app": "mkdir -p ./build/app/build/ && mv -f ./src/app/build ./build/app/",
+    "docker:push": "docker push giocirque/reecam-web:latest; docker push giocirque/reecam-web:$(git rev-parse --short HEAD)",
     "docker:build": "yarn build && docker build --pull --rm -f Dockerfile -t giocirque/reecam-web:latest -t giocirque/reecam-web:$(git rev-parse --short HEAD) ."
   },
   "bin": {

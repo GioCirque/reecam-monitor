@@ -9,7 +9,7 @@ Config.ensureStoredConfig();
 const port = process.argv[2] || 8080;
 const config = Config.readStoredConfigData();
 const monitor = new CamMonitor(config.cams, Config.mediaPath).start();
-const server = registerApi(register(express().use(...AppMiddleware))).listen(port, () =>
+const server = register(registerApi(express().use(...AppMiddleware))).listen(port, () =>
   console.log(`Web server listening on ${port}`)
 );
 

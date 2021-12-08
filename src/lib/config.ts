@@ -5,7 +5,8 @@ import { ConfigRoot, ConfigUser } from './config.types';
 
 export * from './config.types';
 
-const CONFIG_DIR_BASE = path.resolve(__dirname, '../..', '.ipcams');
+const CONFIG_DIR_ENV = process.env.REECAM_CONFIG_PATH;
+const CONFIG_DIR_BASE = CONFIG_DIR_ENV || path.resolve(__dirname, '../..', '.ipcams');
 const CONFIG_FILE_PATH = path.resolve(CONFIG_DIR_BASE, 'config');
 const CONFIG_MEDIA_DIR = path.resolve(CONFIG_DIR_BASE, 'media');
 

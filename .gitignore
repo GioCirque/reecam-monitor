@@ -1,8 +1,9 @@
-node_modules
-dist
-build
-.jest
-.vscode
-.ipcams
 .DS_Store
 .env
+.ipcams
+.jest
+.vscode
+.webpack
+build
+dist
+node_modules

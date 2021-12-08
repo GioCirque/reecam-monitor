@@ -1,13 +1,17 @@
 version: '3.9'
 services:
   reecam-web:
-    container_name: reecam-web
+    image: giocirque/reecam-web:latest
     network_mode: bridge
     restart: always
-    ports:
-      - '8080:8080'
+    environment:
+      - PUBLIC_URL=/app
+      - REECAM_CONFIG_PATH=/reecam/.ipcams
+      - PUBLIC_HOST="http://localhost:8080,http://legion:8080,http://giosplace.ddns.net:8080"
     volumes:
-      - ./.ipcams:/reecam/.ipcams:rw
+      - ./.ipcams:/reecam/.ipcams
+    ports:
+      - 8080:8080
     build:
       context: .
       dockerfile: Dockerfile
