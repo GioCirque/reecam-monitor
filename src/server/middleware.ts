@@ -6,7 +6,7 @@ import { corsConfig } from './cors';
 import { Config } from '../lib/config';
 import { ConfigUser } from '../lib/config.types';
 
-const ALLOW_ANON_PATHS: (string | RegExp)[] = ['/api/login', /\/static\/.*/i, '/app', '/'];
+const ALLOW_ANON_PATHS: (string | RegExp)[] = ['/api/login', /\/app\/.*/i, '/'];
 
 export const validateUser: RequestHandler = (req, res, next) => {
   let email = 'anon';
