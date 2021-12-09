@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { IPCam } from './reecam';
 import { Capturer } from './capturer';
+import { CamParams } from './capturer.types';
 import { IPCamAlarmStatus, IPCamOptions, IPCamParams } from './reecam.types';
 import { IPCamAlarm, IPCamAlarmCache, IPCamParamCache } from './monitor.types';
 
@@ -60,7 +61,12 @@ export class CamMonitor {
   private async handleAlarmChanges(camAlarms: IPCamAlarm[]): Promise<void> {
     const now = new Date();
     for (const camAlarm of camAlarms.filter((c) => c.isAlarmed)) {
-      this.capturer.addEvent(camAlarm.params, now);
+      const params: CamParams = {
+        camIp: camAlarm.cam.ip,
+        camId: camAlarm.params.id,
+        alarmSeconds: camAlarm.params.alarm_period,
+      };
+      this.capturer.addEvent(params, now);
     }
   }
 
@@ -81,6 +87,7 @@ export class CamMonitor {
 
   start(): CamMonitor {
     this.writeMetaData();
+    this.capturer.start();
     if (!this.interval) {
       this.interval = setInterval(this.checkAllAlarmStates, 500);
       console.log(`Started monitoring ${this.options.length} cameras...`);

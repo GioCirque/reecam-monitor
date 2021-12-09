@@ -1,7 +1,7 @@
 import GIFEncoder from 'gifencoder';
 
 import { IPCam } from './reecam';
-import { IPCamParams, IPCamSearchRecord } from './reecam.types';
+import { IPCamSearchRecord } from './reecam.types';
 
 export enum CaptureStage {
   Active,
@@ -12,12 +12,14 @@ export enum CaptureStage {
   Complete,
 }
 
+export type CamParams = { camId: string; camIp: string; alarmSeconds: number };
+
 export type CaptureEvent = {
   stop: Date;
   start: Date;
   stage: CaptureStage;
   frames: number;
-  params: IPCamParams;
+  params: CamParams;
   files?: IPCamSearchRecord[];
   isGifFinal: boolean;
 };

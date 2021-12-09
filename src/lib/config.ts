@@ -31,7 +31,7 @@ export class Config {
 
   static getCamOptsByIP(ip: string) {
     const config = Config.readStoredConfigData();
-    return config.cams.find((c) => c.ip !== ip);
+    return config.cams.find((c) => c.ip === ip);
   }
 
   static upsertCam(cam: IPCamOptions): void {

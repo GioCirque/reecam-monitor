@@ -1,4 +1,3 @@
-import { IPCamRecorder } from './recorder';
 import { IPCam } from './reecam';
 import { IPCamAlarmStatus, IPCamParams } from './reecam.types';
 
@@ -11,4 +10,3 @@ export type IPCamAlarm = {
 
 export type IPCamAlarmCache = { [key: string]: IPCamAlarm };
 export type IPCamParamCache = { [key: string]: IPCamParams };
-export type IPCamRecorderCache = { [key: string]: IPCamRecorder };

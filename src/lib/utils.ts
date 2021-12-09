@@ -1,3 +1,11 @@
+import fs from 'fs';
+import path from 'path';
+import { spawn, SpawnOptions } from 'child_process';
+
+import { IPCamSearchRecord } from './reecam.types';
+import { CaptureEvent, RuntimeCaptureEvent } from './capturer.types';
+import { Config } from './config';
+
 export function toEpoch(date?: Date): number | undefined {
   if (!date) return undefined;
   return Math.floor(date.getTime() / 1000);
@@ -19,7 +27,7 @@ export function timeSince(date: Date, now = new Date()): TimeDiff {
 }
 
 export function msToTime(s: number): string {
-  const pad = (n: number, z = 2) => ('00' + n).slice(-z);
+  const pad = (n: number, z = 2) => `00${n}`.slice(-z);
   return (
     pad((s / 3.6e6) | 0) +
     ':' +
@@ -27,8 +35,58 @@ export function msToTime(s: number): string {
     ':' +
     pad(((s % 6e4) / 1000) | 0) +
     '.' +
-    pad(s % 1000, 3)
+    pad(s / 1000, 3)
   );
+}
+
+export function logForEvent(event: RuntimeCaptureEvent, message: string, ...extras: any[]): void {
+  const eventName = toEpoch(event.start);
+  const camName = event.cam && ` ${event.cam.alias}@${event.cam.ip}`;
+  console.log(`[${eventName + camName}]\t${message}`, ...extras);
+}
+
+export type ChildProcessResult = { code: number; stdout: string; stderr: string; cmd: string };
+export function waitForProcess(command: string, args: readonly string[], options: SpawnOptions) {
+  const stdoutChunks: unknown[] = [];
+  const stderrChunks: unknown[] = [];
+  const startingCmd = `${command} ${args.join(' ')}`;
+  const [awaiter, resolver, rejecter] = makeAwaiter<ChildProcessResult>();
+  const childProcess = spawn(command, args, options)
+    .once('exit', (code: number) => {
+      if (code === 0) {
+        resolver({
+          code,
+          stdout: stdoutChunks.join('\n').trim(),
+          stderr: stderrChunks.join('\n').trim(),
+          cmd: startingCmd,
+        });
+      } else {
+        rejecter({
+          code,
+          stdout: stdoutChunks.join('\n').trim(),
+          stderr: stderrChunks.join('\n').trim(),
+          cmd: startingCmd,
+        });
+      }
+    })
+    .once('error', rejecter);
+  if (childProcess.stdout) childProcess.stdout.on('data', (chunk) => stdoutChunks.push(chunk));
+  if (childProcess.stderr) childProcess.stderr.on('data', (chunk) => stderrChunks.push(chunk));
+  return awaiter;
+}
+
+export function makeAwaiter<T = void>(): [
+  Promise<T>,
+  (value?: T | PromiseLike<T>) => void,
+  (reason?: unknown) => void
+] {
+  let rejecter: (reason?: unknown) => void;
+  let resolver: (value?: T | PromiseLike<T>) => void;
+  const awaiter = new Promise<T>((resolve, reject) => {
+    rejecter = reject;
+    resolver = resolve;
+  });
+  return [awaiter, resolver, rejecter];
 }
 
 export function toShortDate(date?: Date): string | undefined {
@@ -83,4 +141,56 @@ export function humanFileSize(bytes: number, si = false, dp = 1): string {
   } while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1);
 
   return [bytes.toFixed(dp), units[u]].join(' ');
+}
+export function sortEventsAsc(a: CaptureEvent, b: CaptureEvent) {
+  return b.start.valueOf() - a.start.valueOf();
+}
+
+export function sortRecordsAsc(a: IPCamSearchRecord, b: IPCamSearchRecord) {
+  return b.start_time.valueOf() - a.start_time.valueOf();
+}
+
+export function makeLocalCamPath(event: CaptureEvent) {
+  const params = event.params;
+  return path.resolve(Config.mediaPath, params.camId);
+}
+
+export function makeLocalEventPath(event: CaptureEvent) {
+  const params = event.params;
+  const epoch = toEpoch(event.start);
+  const folder = path.resolve(Config.mediaPath, params.camId, epoch.toString());
+
+  fs.mkdirSync(folder, { recursive: true });
+  return folder;
+}
+
+export function makeLocalFilePath(event: CaptureEvent, file: IPCamSearchRecord) {
+  const folder = this.makeLocalEventPath(event);
+  return path.resolve(folder, file.name);
+}
+
+export function canDownload(record: IPCamSearchRecord, event: CaptureEvent): boolean {
+  const isIncluded = event.files?.includes(record);
+  const isRecordCovering = record.start_time <= event.start && record.end_time >= event.stop;
+  const isStartInRecord = event.start >= record.start_time && event.start <= record.end_time;
+  const isStopInRecord = event.stop >= record.start_time && event.stop <= record.end_time;
+
+  return !isIncluded && (isRecordCovering || isStartInRecord || isStopInRecord);
+}
+
+/**
+ * Verifies a possible local file match, and deletes it if it's an incomplete file
+ * @returns `true` if the file exists and is considered complete, otherwise `false`.
+ */
+export function maybeCleanupFile(event: RuntimeCaptureEvent, file: IPCamSearchRecord): boolean {
+  const remoteSize = file.size;
+  const fullFilePath = makeLocalFilePath(event, file);
+
+  const localExists = fs.existsSync(fullFilePath);
+  const localSize = localExists ? fs.statSync(fullFilePath)?.size : 0;
+  if (localExists && localSize >= remoteSize) return true;
+  else if (localExists && localSize < remoteSize) {
+    fs.rmSync(fullFilePath, { force: true });
+    return false;
+  }
 }
