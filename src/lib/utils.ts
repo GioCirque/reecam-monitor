@@ -165,7 +165,7 @@ export function makeLocalEventPath(event: CaptureEvent) {
 }
 
 export function makeLocalFilePath(event: CaptureEvent, file: IPCamSearchRecord) {
-  const folder = this.makeLocalEventPath(event);
+  const folder = makeLocalEventPath(event);
   return path.resolve(folder, file.name);
 }
 
