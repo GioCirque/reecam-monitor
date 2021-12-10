@@ -279,15 +279,16 @@ export class Capturer {
           `Encoding ${msToTime(eventDurationMs)} from ${toShortDateTime(event.start)} to ${toShortDateTime(event.stop)}`
         );
 
-        const finalVideo = await mergeMOVFiles(mediaFolderPath, eventDurationMs, startTimeOffsetMs, (message, args) =>
+        // const finalVideo =
+        await mergeMOVFiles(mediaFolderPath, eventDurationMs, startTimeOffsetMs, (message, args) =>
           logForEvent(event, message, args)
         );
-        if (fs.existsSync(finalVideo)) {
+        /* if (fs.existsSync(finalVideo)) {
           for (const file of event.files) {
             const localPath = makeLocalFilePath(event, file);
             fs.rmSync(localPath, { force: true });
           }
-        }
+        } */
         event.stage = CaptureStage.Encoded;
       } catch (e) {
         console.error('Encoding error ', e);
@@ -365,6 +366,7 @@ export class Capturer {
       }
     }
 
+    this.processMetadata();
     for (const event of completed) {
       const index = this.captureData.captures[event.params.camId].indexOf(event);
       if (index >= 0) this.captureData.captures[event.params.camId].splice(index, 1);

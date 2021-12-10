@@ -63,6 +63,7 @@ export async function mergeMOVFiles(
   try {
     const fileOrFiles = `file${movFiles.length > 1 ? 's' : ''}`;
     logger(`Encoding started on ${movFiles.length} ${fileOrFiles} for ${outputDuration} from ${startingOffset}`);
+    logger(`ffmpeg ${ffmpegArgs.join(' ')}`);
 
     /**    THIS IS THE IMPORTANT CALL! THIS ONE RIGHT HERE!    **/
     const result = await waitForProcess('ffmpeg', ffmpegArgs, { ...spawnOpts, cwd: mediaFolder });

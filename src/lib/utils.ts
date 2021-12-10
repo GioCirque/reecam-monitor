@@ -42,7 +42,7 @@ export function msToTime(s: number): string {
 export function logForEvent(event: RuntimeCaptureEvent, message: string, ...extras: any[]): void {
   const eventName = toEpoch(event.start);
   const camName = event.cam && ` ${event.cam.alias}@${event.cam.ip}`;
-  console.log(`[${eventName + camName}]\t${message}`, ...extras);
+  console.log(`[${eventName + camName}]\t${message}`, extras);
 }
 
 export type ChildProcessResult = { code: number; stdout: string; stderr: string; cmd: string };
