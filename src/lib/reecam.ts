@@ -86,10 +86,8 @@ export class IPCam {
     return result;
   }
 
-  async searchRecords(from?: Date, to?: Date): Promise<IPCamSearchResults> {
-    const toParam = toEpoch(to);
-    const fromParam = toEpoch(from);
-    const params = { from: fromParam, to: toParam };
+  async searchRecords(from?: number, to?: number): Promise<IPCamSearchResults> {
+    const params = { from, to };
     const result = await this.fetch<IPCamSearchResults>({ url: 'search_record.cgi', params });
     if (!result) return undefined;
     if (!result.record) result.record = [];

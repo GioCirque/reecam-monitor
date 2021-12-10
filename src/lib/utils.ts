@@ -8,7 +8,7 @@ import { Config } from './config';
 
 export function toEpoch(date?: Date): number | undefined {
   if (!date) return undefined;
-  return Math.floor(date.getTime() / 1000);
+  return Math.floor(date.valueOf() / 1000);
 }
 
 export function fromEpoch(date?: number): Date | undefined {
@@ -27,7 +27,7 @@ export function timeSince(date: Date, now = new Date()): TimeDiff {
 }
 
 export function msToTime(s: number): string {
-  const pad = (n: number, z = 2) => `00${n}`.slice(-z);
+  const pad = (n: number, z = 2) => `00${`${n}`.split('.').pop()}`.slice(-z);
   return (
     pad((s / 3.6e6) | 0) +
     ':' +

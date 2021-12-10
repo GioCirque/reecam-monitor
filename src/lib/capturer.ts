@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import Jimp from 'jimp';
 import GIFEncoder from 'gifencoder';
+import { Canvas, createCanvas, loadImage } from 'canvas';
 import { addSeconds, differenceInSeconds } from 'date-fns';
 
 import { IPCam } from './reecam';
@@ -150,6 +151,7 @@ export class Capturer {
         start: event.start,
         stop: event.stop,
         stage: event.stage,
+        frames: event.frames,
         stageName: CaptureStage[event.stage],
         hasGif: event.isGifFinal,
         hasVid: event.stage >= CaptureStage.Encoding,
@@ -165,18 +167,19 @@ export class Capturer {
     for (const event of events) {
       try {
         if (this.stopNow) break;
-        if (event.frames <= MAX_FRAME_COUNT) {
+        if (event.frames < MAX_FRAME_COUNT) {
           event.frames++;
-          const imageData = await event.cam.getSnapshot();
+          const snapshot = await event.cam.getSnapshot();
           const camFolderPath = makeLocalCamPath(event);
-          const image = await Jimp.read(imageData).then((jimp) => {
-            const smaller = jimp.resize(GIF_DIMS.width, GIF_DIMS.height);
-            const latestSnapshotPath = path.resolve(camFolderPath, 'snapshot.jpeg');
-            return smaller.write(latestSnapshotPath);
-          });
-          event.giffer.addFrame(image.bitmap.data as any);
+          const image = await Jimp.read(snapshot);
+          const context = event.canvas.getContext('2d');
+          const frameImage = await loadImage(snapshot);
+
+          context.drawImage(frameImage, 0, 0);
+          event.giffer.addFrame(context);
+          image.resize(GIF_DIMS.width, GIF_DIMS.height).write(path.resolve(camFolderPath, 'snapshot.jpeg'));
+          await this.maybeFinalizeGif(event);
         }
-        await this.maybeFinalizeGif(event);
       } catch (e) {
         console.error(e);
       }
@@ -184,9 +187,8 @@ export class Capturer {
   }
 
   private async maybeFinalizeGif(event: RuntimeCaptureEvent): Promise<boolean> {
-    if (!event.isGifFinal && (event.frames >= MAX_FRAME_COUNT || event.stage !== CaptureStage.Active)) {
+    if (!event.isGifFinal && event.frames >= MAX_FRAME_COUNT) {
       event.giffer.finish();
-      event.giffer = undefined;
       event.isGifFinal = true;
     }
     return event.isGifFinal;
@@ -273,23 +275,18 @@ export class Capturer {
         const epoch = toEpoch(event.start);
         const eventDurationMs = timeSince(event.start, event.stop).ms;
         const mediaFolderPath = path.resolve(Config.mediaPath, params.camId, epoch.toString());
-        const earliestFileTime = new Date(Math.min(...event.files.map((f) => f.start_time.valueOf())) * 1000);
+        const earliestFileTime = new Date(Math.min(...event.files.map((f) => f.start_time.valueOf())));
         const startTimeOffsetMs = timeSince(earliestFileTime, event.start).ms;
-        logForEvent(
-          event,
-          `Encoding ${msToTime(eventDurationMs)} from ${toShortDateTime(event.start)} to ${toShortDateTime(event.stop)}`
-        );
 
-        // const finalVideo =
-        await mergeMOVFiles(mediaFolderPath, eventDurationMs, startTimeOffsetMs, (message, args) =>
+        const finalVideo = await mergeMOVFiles(mediaFolderPath, eventDurationMs, startTimeOffsetMs, (message, args) =>
           logForEvent(event, message, args)
         );
-        /* if (fs.existsSync(finalVideo)) {
+        if (fs.existsSync(finalVideo)) {
           for (const file of event.files) {
             const localPath = makeLocalFilePath(event, file);
             fs.rmSync(localPath, { force: true });
           }
-        } */
+        }
         event.stage = CaptureStage.Encoded;
       } catch (e) {
         console.error('Encoding error ', e);
@@ -303,9 +300,7 @@ export class Capturer {
       const events = this.captureData.captures[camAlias] as RuntimeCaptureEvent[];
       for (const event of events) {
         if (stage.includes(event.stage)) {
-          event.cam = event.cam || new IPCam(Config.getCamOptsByIP(event.params.camIp));
-          event.giffer = event.giffer || new GIFEncoder(GIF_DIMS.width, GIF_DIMS.height);
-          matches.push(event);
+          matches.push(this.ensureRuntimeEvent(event));
         }
       }
     }
@@ -324,8 +319,15 @@ export class Capturer {
   }
 
   private ensureRuntimeEvent(event: RuntimeCaptureEvent): RuntimeCaptureEvent {
-    event.cam = event.cam || new IPCam(Config.getCamOptsByIP(event.params.camIp));
-    event.giffer = event.giffer || this.makeGiffer(event);
+    if (!event.cam || !(event.cam instanceof IPCam)) {
+      event.cam = new IPCam(Config.getCamOptsByIP(event.params.camIp));
+    }
+    if (!event.giffer || !(event.giffer instanceof GIFEncoder)) {
+      event.giffer = this.makeGiffer(event);
+    }
+    if (!event.canvas || !(event.canvas instanceof Canvas)) {
+      event.canvas = createCanvas(GIF_DIMS.width, GIF_DIMS.height);
+    }
     return event;
   }
 
@@ -333,11 +335,13 @@ export class Capturer {
     const localEventPath = makeLocalEventPath(event);
     const giffer = new GIFEncoder(GIF_DIMS.width, GIF_DIMS.height);
     const gifFinalPath = path.resolve(localEventPath, 'event.gif');
-    giffer.createReadStream().pipe(fs.createWriteStream(gifFinalPath).on('error', console.error));
+
+    giffer.createReadStream().pipe(fs.createWriteStream(gifFinalPath));
     giffer.start();
+    giffer.setRepeat(0);
     giffer.setDelay(500);
     giffer.setQuality(10);
-    giffer.setRepeat(0);
+
     return giffer;
   }
 
@@ -386,7 +390,7 @@ export class Capturer {
   }
 
   private handleCapturePersist(k: RCEKeyType, v: any) {
-    const banned: RCEKeyType[] = ['cam', 'giffer'];
+    const banned: RCEKeyType[] = ['cam', 'giffer', 'canvas'];
     if (banned.includes(k)) return undefined;
     return v;
   }

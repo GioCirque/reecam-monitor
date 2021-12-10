@@ -1,3 +1,4 @@
+import { Canvas } from 'canvas';
 import GIFEncoder from 'gifencoder';
 
 import { IPCam } from './reecam';
@@ -26,6 +27,7 @@ export type CaptureEvent = {
 
 export type RuntimeCaptureEvent = CaptureEvent & {
   cam: IPCam;
+  canvas: Canvas;
   giffer: GIFEncoder;
 };
 
