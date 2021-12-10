@@ -9,8 +9,16 @@ export type IPCamMetaData = {
 };
 
 export type IPCamEvent = {
-  date: Date;
+  id: number;
   gif: string;
   video: string;
   stream: string;
+  elapsed: string;
+  start: number;
+  stop: number;
+  stage: number;
+  stageName: string;
+  hasGif: boolean;
+  hasVid: boolean;
+  isAlarmed: boolean;
 };

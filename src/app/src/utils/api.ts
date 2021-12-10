@@ -9,7 +9,6 @@ function fixCamDataTypes(data: AppData): AppData {
     cam.details = `${BASE_API_URL}${cam.details}`;
     cam.snapshot = `${BASE_API_URL}${cam.snapshot}`;
     for (const event of cam.events) {
-      event.date = new Date(event.date);
       event.gif = `${BASE_API_URL}${event.gif}`;
       event.video = `${BASE_API_URL}${event.video}`;
       event.stream = `${BASE_API_URL}${event.stream}`;

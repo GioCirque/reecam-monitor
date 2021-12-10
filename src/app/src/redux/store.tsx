@@ -1,10 +1,12 @@
-import { createStore, applyMiddleware } from 'redux';
-import rootReducer from './index';
 import createSagaMiddleware from 'redux-saga';
-import rootSaga from '../sagas';
-import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage'; // defaults to localStorage for web
+import { createStore, applyMiddleware } from 'redux';
+import { persistStore, persistReducer } from 'redux-persist';
 import { seamlessImmutableReconciler, seamlessImmutableTransformCreator } from 'redux-persist-seamless-immutable';
+
+import rootSaga from '../sagas';
+import rootReducer from './index';
+import { appTransformer } from './transform';
 
 const transformerConfig = {
   blacklistPerReducer: {
@@ -17,7 +19,7 @@ const persistConfig = {
   key: 'root',
   storage,
   stateReconciler: seamlessImmutableReconciler,
-  transforms: [seamlessImmutableTransformCreator(transformerConfig)],
+  transforms: [appTransformer, seamlessImmutableTransformCreator(transformerConfig)],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

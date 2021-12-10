@@ -29,6 +29,7 @@
     "inquirer": "8.2.0",
     "jimp": "0.16.1",
     "mime-db": "1.51.0",
+    "ts-command-line-args": "2.2.0",
     "uuid": "8.3.2",
     "webpack": "5.65.0"
   },

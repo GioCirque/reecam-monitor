@@ -1,16 +1,21 @@
 import express from 'express';
+import { parse } from 'ts-command-line-args';
+
 import { register } from './routes';
 import { Config } from '../lib/config';
 import { registerApi } from './routes.api';
 import { CamMonitor } from '../lib/monitor';
 import { AppMiddleware } from './middleware';
+import { ServeArgs, ServeArgsConfig } from './serve.types';
 
 Config.ensureStoredConfig();
-const port = process.argv[2] || 8080;
+const args = parse<ServeArgs>(ServeArgsConfig);
+const { port, monitor: useMonitor } = args;
+
 const config = Config.readStoredConfigData();
-const monitor = new CamMonitor(config.cams, Config.mediaPath).start();
+const monitor = useMonitor && new CamMonitor(config.cams, Config.mediaPath).start();
 const server = register(registerApi(express().use(...AppMiddleware))).listen(port, () =>
-  console.log(`Web server listening on ${port}`)
+  console.log(`Web server listening on ${port}${useMonitor ? ' with monitoring' : ''}`)
 );
 
 function safeStopMonitor() {
@@ -19,7 +24,7 @@ function safeStopMonitor() {
   }
   if (monitor) {
     console.log();
-    monitor.stop();
+    monitor?.stop();
   }
 }
 

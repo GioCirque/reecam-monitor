@@ -23,9 +23,12 @@ function getCamEvents(camPath: string, alias: string): IPCamEvent[] {
     })
     .map((entry) => {
       const epoch = parseInt(entry.name);
-      const date = new Date(epoch * 1000);
+      const metadata = JSON.parse(fs.readFileSync(path.resolve(camEventPath, entry.name, 'metadata.json'), 'utf-8'));
       return {
-        date,
+        ...metadata,
+        id: epoch,
+        stop: new Date(metadata.stop).valueOf(),
+        start: new Date(metadata.start).valueOf(),
         gif: `/api/cams/${alias}/${epoch}/gif`,
         video: `/api/cams/${alias}/${epoch}/video`,
         stream: `/api/cams/${alias}/${epoch}/stream`,

@@ -33,10 +33,10 @@ type ItemProps = {
 };
 function CamEventListCard(props: ItemProps) {
   const { event, classes, onStream, onDelete } = props;
-  const eventId = (event.date.valueOf() / 1000).toString();
+  const eventId = event.id.toString();
   const title = (() => {
     try {
-      let result = formatDistanceToNow(event.date, { addSuffix: true });
+      let result = formatDistanceToNow(event.start, { addSuffix: true });
       result = result[0].toLocaleUpperCase() + result.substring(1);
       return result;
     } catch (e) {
@@ -44,11 +44,11 @@ function CamEventListCard(props: ItemProps) {
     }
     return 'Console Error';
   })();
-  const subtitle = format(event.date, 'PPpp');
+  const subtitle = format(event.start, 'PPpp');
   return (
     <Card className={classes.root}>
       <CardHeader title={title} subheader={subtitle} />
-      <CardMedia className={classes.media} image={event.gif} title={`Cam event from ${event.date}`} />
+      <CardMedia className={classes.media} image={event.gif} title={`Cam event from ${subtitle}`} />
       <CardActions>
         <Button size='small' onClick={() => onStream(event)}>
           Stream
@@ -74,12 +74,12 @@ export default function CamEventsList(props: Props) {
   const classes = useStyles();
   const itemClasses = useItemStyles();
   const { cam, onDelete, onStream } = props;
-  const events = [...props.cam.events].sort((a, b) => b.date.valueOf() - a.date.valueOf());
+  const events = [...props.cam.events].sort((a, b) => b.start - a.start);
 
   return (
     <Grid container direction='row' justifyContent='center' spacing={2} className={classes.root}>
       {events.map((e) => (
-        <Grid item key={e.date.valueOf().toString()}>
+        <Grid item key={e.start.toString()}>
           <CamEventListCard
             event={e}
             onStream={onStream}

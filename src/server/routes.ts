@@ -8,5 +8,8 @@ export const register = (app: express.Application): express.Application => {
   console.log(`Setting up router with basename '${appBaseName}'`);
   return app
     .use(`${appBaseName}`, express.static(appBuildPath))
-    .get('/', (req, res) => res.redirect(308, `${appBaseName || ''}`));
+    .get('/', (req, res) => res.redirect(308, `${appBaseName || ''}`))
+    .get(`(${appBaseName}/*)?`, (req, res) => {
+      res.sendFile(path.join(appBuildPath, 'index.html'));
+    });
 };
