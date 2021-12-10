@@ -84,6 +84,7 @@ export class Capturer {
         start,
         params,
         files: [],
+        frames: 0,
         isGifFinal: false,
         stage: CaptureStage.Active,
         stop: addSeconds(start, alarmSeconds),
@@ -164,17 +165,17 @@ export class Capturer {
     for (const event of events) {
       try {
         if (this.stopNow) break;
-        if (event.frames >= MAX_FRAME_COUNT) continue;
-
-        event.frames++;
-        const imageData = await event.cam.getSnapshot();
-        const camFolderPath = makeLocalCamPath(event);
-        const image = await Jimp.read(imageData).then((jimp) => {
-          const smaller = jimp.resize(GIF_DIMS.width, GIF_DIMS.height);
-          const latestSnapshotPath = path.resolve(camFolderPath, 'snapshot.jpeg');
-          return smaller.write(latestSnapshotPath);
-        });
-        event.giffer.addFrame(image.bitmap.data as any);
+        if (event.frames <= MAX_FRAME_COUNT) {
+          event.frames++;
+          const imageData = await event.cam.getSnapshot();
+          const camFolderPath = makeLocalCamPath(event);
+          const image = await Jimp.read(imageData).then((jimp) => {
+            const smaller = jimp.resize(GIF_DIMS.width, GIF_DIMS.height);
+            const latestSnapshotPath = path.resolve(camFolderPath, 'snapshot.jpeg');
+            return smaller.write(latestSnapshotPath);
+          });
+          event.giffer.addFrame(image.bitmap.data as any);
+        }
         await this.maybeFinalizeGif(event);
       } catch (e) {
         console.error(e);
