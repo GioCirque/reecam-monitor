@@ -12,4 +12,8 @@ VOLUME [ "/reecam/.ipcams" ]
 
 EXPOSE 8080
 WORKDIR /reecam/server
-CMD [ "node", "index.js", "8080" ]
+
+# Additional options include:
+# -p, --port <number>   // Specify port number
+# -M --no-monitoring    // Disable monitoring
+CMD [ "node", "index.js"]

@@ -5,11 +5,11 @@
   "author": "Gio Palacino <gio@palacino.net>",
   "license": "CC0-1.0",
   "scripts": {
-    "docker": "yarn build && yarn docker:build",
     "build": "rm -rf ./build && webpack && yarn --cwd ./src/app build && yarn move:app",
     "serve": "ts-node ./src/server/serve.ts",
     "start": "yarn build && docker compose up --build --detach",
     "move:app": "mkdir -p ./build/app/build/ && mv -f ./src/app/build ./build/app/",
+    "dockerize": "yarn docker:build && yarn docker:push",
     "docker:push": "docker push giocirque/reecam-web:latest; docker push giocirque/reecam-web:$(git rev-parse --short HEAD)",
     "docker:build": "yarn build && docker build --pull --rm -f Dockerfile -t giocirque/reecam-web:latest -t giocirque/reecam-web:$(git rev-parse --short HEAD) ."
   },
@@ -29,9 +29,9 @@
     "inquirer": "8.2.0",
     "jimp": "0.16.1",
     "mime-db": "1.51.0",
-    "ts-command-line-args": "2.2.0",
     "uuid": "8.3.2",
-    "webpack": "5.65.0"
+    "webpack": "5.65.0",
+    "yargs": "17.3.0"
   },
   "devDependencies": {
     "@types/cookie-parser": "1.4.2",
@@ -43,6 +43,7 @@
     "@types/node": "16.11.11",
     "@types/uuid": "8.3.3",
     "@types/webpack": "5.28.0",
+    "@types/yargs": "17.0.7",
     "@typescript-eslint/eslint-plugin": "5.5.0",
     "@typescript-eslint/parser": "5.5.0",
     "eslint": "8.4.0",
