@@ -5,17 +5,18 @@
   "author": "Gio Palacino <gio@palacino.net>",
   "license": "CC0-1.0",
   "scripts": {
+    "reset": "rm -rf node_modules && rm -rf src/app/node_modules && yarn install && cd ./src/app && yarn install",
     "build": "rm -rf ./build && webpack && yarn --cwd ./src/app build && yarn move:app",
     "serve": "ts-node ./src/server/serve.ts",
-    "start": "yarn build && docker compose up --build --detach",
-    "move:app": "mkdir -p ./build/app/build/ && mv -f ./src/app/build ./build/app/",
-    "dockerize": "yarn docker:build && yarn docker:push",
-    "docker:push": "docker push giocirque/reecam-web:latest; docker push giocirque/reecam-web:$(git rev-parse --short HEAD)",
-    "docker:build": "yarn build && docker build --pull --rm -f Dockerfile -t giocirque/reecam-web:latest -t giocirque/reecam-web:$(git rev-parse --short HEAD) ."
+    "express": "cd ./build/server && npm init -y && npm install --production --no-optional --no-save --prefix . express",
+    "start": "yarn build && sudo docker compose up --build --detach",
+    "move:app": "mkdir -p ./build/app/build && cp -fr ./src/app/build ./build/app/",
+    "dockerize": "yarn docker:build && echo \"Please push images from a local and authenticated device.\"",
+    "docker:push": "sudo docker push giocirque/reecam-web:latest; sudo docker push giocirque/reecam-web:$(git rev-parse --short HEAD)",
+    "docker:build": "yarn build && sudo docker build --pull --rm -f Dockerfile -t giocirque/reecam-web:latest -t giocirque/reecam-web:$(git rev-parse --short HEAD) ."
   },
   "bin": {
-    "ipcams": "./src/cli/index.ts",
-    "camserve": "./src/server/serve.ts"
+    "ipcams": "./src/cli/index.ts"
   },
   "dependencies": {
     "axios": "0.24.0",

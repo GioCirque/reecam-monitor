@@ -4,7 +4,10 @@ ENV PUBLIC_URL="/app"
 ENV REECAM_CONFIG_PATH="/reecam/.ipcams"
 ENV PUBLIC_HOST="http://localhost:3000,http://localhost:8080,http://localhost:5555"
 
-RUN apk --no-cache add ffmpeg --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community
+RUN apk upgrade --no-cache \
+    && apk --no-cache add pixman cairo pango libjpeg-turbo \
+    && apk --no-cache add ffmpeg --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community
+RUN npm install -g express --production
 RUN mkdir -p /reecam/server && mkdir -p /reecam/app/build && mkdir -p /reecam/.ipcams
 ADD ./build /reecam
 

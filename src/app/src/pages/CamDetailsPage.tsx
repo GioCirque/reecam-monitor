@@ -57,6 +57,7 @@ function CamDetailsPage(props: Props) {
       loadData && loadData();
     }, 1000);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!user) return <Navigate to='/login' />;

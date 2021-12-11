@@ -24,6 +24,7 @@ function CamsPage(props: Props) {
       loadData && loadData();
     }, 1000);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!props.user) {
