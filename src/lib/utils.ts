@@ -6,26 +6,31 @@ import { IPCamSearchRecord } from './reecam.types';
 import { CaptureEvent, RuntimeCaptureEvent } from './capturer.types';
 import { Config } from './config';
 
+/**
+ * Converts a date object to epoch time
+ * @param date The date to convert
+ * @returns The epoch value
+ */
 export function toEpoch(date?: Date): number | undefined {
   if (!date) return undefined;
   return Math.floor(date.valueOf() / 1000);
 }
 
+/**
+ * Converts and epoch value to a date object
+ * @param date The epoch time value
+ * @returns The date value
+ */
 export function fromEpoch(date?: number): Date | undefined {
   if (!date) return undefined;
   return new Date(Math.floor(date * 1000));
 }
 
-export type TimeDiff = { ms: number; seconds: number; days: number; hours: number; minutes: number };
-export function timeSince(date: Date, now = new Date()): TimeDiff {
-  const ms = Math.abs(date.valueOf() - now.valueOf()); // milliseconds between now & date
-  const seconds = Math.abs(ms / 1000);
-  const days = Math.abs(ms / 86400000); // days
-  const hours = Math.abs((ms % 86400000) / 3600000); // hours
-  const minutes = Math.abs(((ms % 86400000) % 3600000) / 60000); // minutes
-  return { ms, seconds, days, hours, minutes };
-}
-
+/**
+ * Converts milliseconds to the duration format hh:mm:ss.mil
+ * @param s The milliseconds value
+ * @returns A string in the format 00:00:00.000
+ */
 export function msToTime(s: number): string {
   const pad = (n: number, z = 2) => `00${`${n}`.split('.').pop()}`.slice(-z);
   return (
@@ -39,13 +44,31 @@ export function msToTime(s: number): string {
   );
 }
 
+/**
+ * Logs a standard format event to process.stdout
+ * @param event The event to log on behalf of
+ * @param message The message to log
+ * @param extras Message interpolation values or additional values to output
+ */
 export function logForEvent(event: RuntimeCaptureEvent, message: string, ...extras: any[]): void {
   const eventName = toEpoch(event.start);
   const camName = event.cam && ` ${event.cam.alias}@${event.cam.ip}`;
-  console.log(`[${eventName + camName}]\t${message}`, extras);
+  !extras || extras.length === 0
+    ? console.log(`[${eventName + camName}]\t${message}`)
+    : console.log(`[${eventName + camName}]\t${message}`, extras);
 }
 
 export type ChildProcessResult = { code: number; stdout: string; stderr: string; cmd: string };
+/**
+ * Launches a process, records it's stdout and stderr streams, and returns a
+ * promise which will resolve or reject based on the exit code. The promise
+ * yields a ChildProcessResult with the available info about the child process
+ * and it's result.
+ * @param command The executable command
+ * @param args The arguments to provide to the command
+ * @param options The options for launching the process
+ * @returns A ChildProcessResult representing the operation results
+ */
 export function waitForProcess(command: string, args: readonly string[], options: SpawnOptions) {
   const stdoutChunks: unknown[] = [];
   const stderrChunks: unknown[] = [];
@@ -75,6 +98,10 @@ export function waitForProcess(command: string, args: readonly string[], options
   return awaiter;
 }
 
+/**
+ * Creates a promise, resolver and rejecter.
+ * @returns A thruple of Promise<T>, resolver and rejecter
+ */
 export function makeAwaiter<T = void>(): [
   Promise<T>,
   (value?: T | PromiseLike<T>) => void,
@@ -89,16 +116,42 @@ export function makeAwaiter<T = void>(): [
   return [awaiter, resolver, rejecter];
 }
 
+/**
+ * Returns the earliest and latest date represented by an array of `files`
+ * @param files An array of `IPCamSearchRecord` objects
+ * @returns A tuple of earliest and latest dates
+ * @example
+ * const files = getSearchRecords(); // Returns IPCamSearchRecord[]
+ * const [earliest, latest] = getDateBounds(files);
+ */
+export function getDateBounds(files: IPCamSearchRecord[]) {
+  const latest = new Date(Math.max(...files.map((f) => f.end_time.valueOf())));
+  const earliest = new Date(Math.min(...files.map((f) => f.start_time.valueOf())));
+  return [earliest, latest];
+}
+
+/**
+ * Formats a date in ISO date format 000-00-00
+ * @param date The date to format
+ * @returns A string in the format 000-00-00
+ */
 export function toShortDate(date?: Date): string | undefined {
   if (!date) return undefined;
+  if (!(date instanceof Date)) throw new Error(`Provided value is a ${typeof date} (${date}) not a date`);
   return `${date.getFullYear().toString().padStart(4, '0')}-${date.getMonth().toString().padStart(2, '0')}-${date
     .getDate()
     .toString()
     .padStart(2, '0')}`;
 }
 
+/**
+ * Format a date and time in ISO-ish format 0000-00-00 00:00:00.000
+ * @param date The date to be formatted
+ * @returns A string in the format of 0000-00-00 00:00:00.000
+ */
 export function toShortDateTime(date?: Date): string | undefined {
   if (!date) return undefined;
+  if (!(date instanceof Date)) throw new Error(`Provided value is a ${typeof date} (${date}) not a date`);
   return `${date.getFullYear().toString().padStart(4, '0')}-${date.getMonth().toString().padStart(2, '0')}-${date
     .getDate()
     .toString()
@@ -142,19 +195,34 @@ export function humanFileSize(bytes: number, si = false, dp = 1): string {
 
   return [bytes.toFixed(dp), units[u]].join(' ');
 }
+
+/**
+ * Sorts events by start time in ascending order
+ */
 export function sortEventsAsc(a: CaptureEvent, b: CaptureEvent) {
   return b.start.valueOf() - a.start.valueOf();
 }
 
+/**
+ * Sorts search records by start time in ascending order
+ */
 export function sortRecordsAsc(a: IPCamSearchRecord, b: IPCamSearchRecord) {
   return b.start_time.valueOf() - a.start_time.valueOf();
 }
 
+/**
+ * Make the local file path for an event's camera
+ * @returns A string containing `<config media path>\<cam identifier>`
+ */
 export function makeLocalCamPath(event: CaptureEvent) {
   const params = event.params;
   return path.resolve(Config.mediaPath, params.camId);
 }
 
+/**
+ * Make the local file path for an event
+ * @returns A string containing `<config media path>\<cam identifier>\<event epoch start>`
+ */
 export function makeLocalEventPath(event: CaptureEvent) {
   const params = event.params;
   const epoch = toEpoch(event.start);
@@ -164,11 +232,21 @@ export function makeLocalEventPath(event: CaptureEvent) {
   return folder;
 }
 
+/**
+ * Make the local file path for an event video file
+ * @returns A string containing `<config media path>\<cam identifier>\<event epoch start>\<file name>`
+ */
 export function makeLocalFilePath(event: CaptureEvent, file: IPCamSearchRecord) {
   const folder = makeLocalEventPath(event);
   return path.resolve(folder, file.name);
 }
 
+/**
+ * Determines if an event record is relevant to an event or not
+ * @param record The event record
+ * @param event The event
+ * @returns True if the record represents the event, otherwise false.
+ */
 export function canDownload(record: IPCamSearchRecord, event: CaptureEvent): boolean {
   const isIncluded = event.files?.includes(record);
   const isRecordCovering = record.start_time <= event.start && record.end_time >= event.stop;

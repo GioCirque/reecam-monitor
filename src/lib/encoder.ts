@@ -34,7 +34,7 @@ export async function mergeMOVFiles(
   const outputDuration = msToTime(durationMs);
   const outputFilePath = path.resolve(mediaFolder, outputFileName);
   if (fs.existsSync(outputFilePath)) {
-    startingOffset = '0';
+    startingOffset = '00:00:00.000';
     movFiles.unshift(outputFileName);
   }
 

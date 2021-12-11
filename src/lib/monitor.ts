@@ -1,11 +1,12 @@
 import fs from 'fs';
 import path from 'path';
+import { addSeconds } from 'date-fns';
+
 import { IPCam } from './reecam';
 import { Capturer } from './capturer';
 import { CamParams } from './capturer.types';
 import { IPCamAlarmStatus, IPCamOptions, IPCamParams } from './reecam.types';
 import { IPCamAlarm, IPCamAlarmCache, IPCamParamCache } from './monitor.types';
-import { addMinutes } from 'date-fns';
 
 export class CamMonitor {
   private readonly cams: IPCam[];
@@ -60,7 +61,7 @@ export class CamMonitor {
   }
 
   private async handleAlarmChanges(camAlarms: IPCamAlarm[]): Promise<void> {
-    const now = addMinutes(new Date(), -1); // Time travel back 1 minute before it happened
+    const now = addSeconds(new Date(), -30); // Time travel back 1 minute before it happened
     for (const camAlarm of camAlarms.filter((c) => c.isAlarmed)) {
       const params: CamParams = {
         camIp: camAlarm.cam.ip,

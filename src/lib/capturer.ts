@@ -3,7 +3,7 @@ import path from 'path';
 import Jimp from 'jimp';
 import GIFEncoder from 'gifencoder';
 import { Canvas, createCanvas, loadImage } from 'canvas';
-import { addSeconds, differenceInSeconds } from 'date-fns';
+import { addSeconds, differenceInMilliseconds, differenceInSeconds } from 'date-fns';
 
 import { IPCam } from './reecam';
 import { Config } from './config';
@@ -11,6 +11,7 @@ import { mergeMOVFiles } from './encoder';
 import { IPCamSearchRecord } from './reecam.types';
 import {
   canDownload,
+  getDateBounds,
   logForEvent,
   makeAwaiter,
   makeLocalCamPath,
@@ -20,8 +21,6 @@ import {
   msToTime,
   sortEventsAsc,
   sortRecordsAsc,
-  timeSince,
-  toEpoch,
   toShortDateTime,
 } from './utils';
 import { CamParams, CaptureEvent, CaptureEventFile, CaptureStage, RuntimeCaptureEvent } from './capturer.types';
@@ -145,7 +144,7 @@ export class Capturer {
     for (const event of events) {
       const camEventPath = makeLocalEventPath(event);
       const metadataFilePath = path.resolve(camEventPath, 'metadata.json');
-      const elapsed = msToTime(timeSince(event.start, event.stop).ms);
+      const elapsed = msToTime(differenceInMilliseconds(event.start, event.stop));
       const eventMetadata = {
         elapsed,
         start: event.start,
@@ -156,6 +155,7 @@ export class Capturer {
         hasGif: event.isGifFinal,
         hasVid: event.stage >= CaptureStage.Encoding,
         isAlarmed: now < event.stop,
+        gifSize: GIF_DIMS,
       };
       fs.writeFileSync(metadataFilePath, JSON.stringify(eventMetadata, undefined, 2));
     }
@@ -168,16 +168,24 @@ export class Capturer {
       try {
         if (this.stopNow) break;
         if (event.frames < MAX_FRAME_COUNT) {
-          event.frames++;
           const snapshot = await event.cam.getSnapshot();
           const camFolderPath = makeLocalCamPath(event);
-          const image = await Jimp.read(snapshot);
+          const image = (await Jimp.read(snapshot)).resize(GIF_DIMS.width, GIF_DIMS.height);
           const context = event.canvas.getContext('2d');
-          const frameImage = await loadImage(snapshot);
 
-          context.drawImage(frameImage, 0, 0);
+          const [awaiter, resolve, reject] = makeAwaiter();
+          image.getBuffer(Jimp.MIME_JPEG, (err, buff) => {
+            if (err) return reject(err);
+            loadImage(buff)
+              .then((img) => context.drawImage(img, 0, 0))
+              .then(resolve);
+          });
+          await awaiter;
+
           event.giffer.addFrame(context);
-          image.resize(GIF_DIMS.width, GIF_DIMS.height).write(path.resolve(camFolderPath, 'snapshot.jpeg'));
+          image.write(path.resolve(camFolderPath, 'snapshot.jpeg'));
+          event.frames++;
+
           await this.maybeFinalizeGif(event);
         }
       } catch (e) {
@@ -213,7 +221,12 @@ export class Capturer {
       const files = event.files.sort(sortRecordsAsc);
       for (const file of files) {
         if (this.stopNow) break;
-        await this.downloadFile(event, file);
+        try {
+          await this.downloadFile(event, file);
+        } catch (e) {
+          logForEvent(event, e.message, e);
+          continue;
+        }
       }
 
       this.verifyDownloads(event);
@@ -221,8 +234,10 @@ export class Capturer {
   }
 
   private verifyDownloads(event: RuntimeCaptureEvent) {
-    const downloaded = !event.files.map((file) => maybeCleanupFile(event, file)).includes(false);
-    event.stage = downloaded ? CaptureStage.Downloaded : event.stage;
+    const [earliest, latest] = getDateBounds(event.files);
+    const isEventCovered = event.start > earliest && event.stop < latest;
+    const allFilesDownloaded = !event.files.map((file) => maybeCleanupFile(event, file)).includes(false);
+    event.stage = isEventCovered && allFilesDownloaded ? CaptureStage.Downloaded : event.stage;
   }
 
   private async downloadFile(event: RuntimeCaptureEvent, file: IPCamSearchRecord) {
@@ -233,8 +248,9 @@ export class Capturer {
     if (maybeCleanupFile(event, file)) return;
 
     const [awaiter, resolver, rejecter] = makeAwaiter();
-    const localStream = fs.createWriteStream(fullFilePath, { encoding: 'binary' });
     const remoteStream = await cam.downloadRecord(file.name);
+    if (!remoteStream) throw new Error(`Missing remote event file ${file.name}`);
+    const localStream = fs.createWriteStream(fullFilePath, { encoding: 'binary' });
     remoteStream
       .on('close', () => {
         localStream.end();
@@ -271,12 +287,10 @@ export class Capturer {
     for (const event of events) {
       if (this.stopNow) break;
       try {
-        const params = event.params;
-        const epoch = toEpoch(event.start);
-        const eventDurationMs = timeSince(event.start, event.stop).ms;
-        const mediaFolderPath = path.resolve(Config.mediaPath, params.camId, epoch.toString());
-        const earliestFileTime = new Date(Math.min(...event.files.map((f) => f.start_time.valueOf())));
-        const startTimeOffsetMs = timeSince(earliestFileTime, event.start).ms;
+        const mediaFolderPath = makeLocalEventPath(event);
+        const [earliestFileTime] = getDateBounds(event.files);
+        const eventDurationMs = Math.abs(differenceInMilliseconds(event.start, event.stop));
+        const startTimeOffsetMs = Math.abs(differenceInMilliseconds(earliestFileTime, event.start));
 
         const finalVideo = await mergeMOVFiles(mediaFolderPath, eventDurationMs, startTimeOffsetMs, (message, args) =>
           logForEvent(event, message, args)
@@ -412,9 +426,13 @@ export class Capturer {
     const result = JSON.parse(data) as CaptureEventFile;
 
     Object.values(result.captures).forEach((cl) =>
-      cl.forEach((c) => {
-        c.stop = new Date(c.stop as unknown as string);
-        c.start = new Date(c.start as unknown as string);
+      cl.forEach((ce) => {
+        ce.stop = new Date(ce.stop as unknown as string);
+        ce.start = new Date(ce.start as unknown as string);
+        ce.files.forEach((f) => {
+          f.end_time = new Date(f.end_time);
+          f.start_time = new Date(f.start_time);
+        });
       })
     );
 

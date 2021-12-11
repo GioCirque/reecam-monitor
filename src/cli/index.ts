@@ -4,9 +4,11 @@ import inquirer from 'inquirer';
 import { Command, Argument } from 'commander';
 
 import { Config } from '../lib/config';
+import { Capturer } from '../lib/capturer';
 import { CamMonitor } from '../lib/monitor';
 import packageJson from '../../package.json';
 
+let capture: Capturer;
 let monitor: CamMonitor;
 const ipRegEx = /\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}/;
 
@@ -71,6 +73,12 @@ const program = new Command()
       monitor.start();
     })
   )
+  .addCommand(
+    new Command('capture').description('Process event captures without monitoring').action(() => {
+      capture = new Capturer();
+      capture.start();
+    })
+  )
   .showSuggestionAfterError(true);
 
 function ipValidator(value: string) {
@@ -81,9 +89,12 @@ function ipValidator(value: string) {
 }
 
 function safeStopMonitor() {
+  console.log();
   if (monitor) {
-    console.log();
     monitor.stop();
+  }
+  if (capture) {
+    capture.stop();
   }
 }
 
