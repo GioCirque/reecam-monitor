@@ -29,6 +29,10 @@ const config: webpack.Configuration = {
         exclude: /node_modules/,
         use: ['ts-loader'],
       },
+      {
+        test: /\.node$/,
+        use: ['node-loader'],
+      },
     ],
   },
   plugins: [new ForkTsCheckerWebpackPlugin()],
