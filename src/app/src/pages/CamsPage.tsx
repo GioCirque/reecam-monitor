@@ -19,6 +19,12 @@ function CamsPage(props: Props) {
   const navigate = useNavigate();
   const { data, loadData } = props;
   useEffect(() => loadData && loadData(), [loadData]);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadData && loadData();
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   if (!props.user) {
     return <Navigate to='/login' />;

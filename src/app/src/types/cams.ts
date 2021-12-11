@@ -3,6 +3,7 @@ export type IPCamMetaData = {
   ip: string;
   user: string;
   alias: string;
+  isAlarmed: boolean;
   snapshot: string;
   details: string;
   events: IPCamEvent[];

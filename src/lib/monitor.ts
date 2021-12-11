@@ -7,6 +7,7 @@ import { Capturer } from './capturer';
 import { CamParams } from './capturer.types';
 import { IPCamAlarmStatus, IPCamOptions, IPCamParams } from './reecam.types';
 import { IPCamAlarm, IPCamAlarmCache, IPCamParamCache } from './monitor.types';
+import { ca } from 'date-fns/locale';
 
 export class CamMonitor {
   private readonly cams: IPCam[];
@@ -70,6 +71,7 @@ export class CamMonitor {
       };
       this.capturer.addEvent(params, now);
     }
+    await this.updateMetaData(camAlarms);
   }
 
   private async getCamDataPath(cam: IPCam | IPCamParams) {
@@ -78,12 +80,22 @@ export class CamMonitor {
     return dataDir;
   }
 
+  private async updateMetaData(camAlarms: IPCamAlarm[]) {
+    for (const camAlarm of camAlarms) {
+      const { cam, isAlarmed } = camAlarm;
+      const camDataPath = await this.getCamDataPath(cam);
+      const metaDataPath = path.resolve(camDataPath, 'metadata.json');
+      const metaDataObject = { alias: cam.alias, ip: cam.ip, user: cam.user, isAlarmed };
+      fs.writeFileSync(metaDataPath, JSON.stringify(metaDataObject, undefined, 2), { encoding: 'utf-8' });
+    }
+  }
+
   private async writeMetaData() {
     for (const cam of this.cams) {
       const camDataPath = await this.getCamDataPath(cam);
       const metaDataPath = path.resolve(camDataPath, 'metadata.json');
-      const metaDataObject = { alias: cam.alias, ip: cam.ip, user: cam.user };
-      fs.writeFileSync(metaDataPath, JSON.stringify(metaDataObject), { encoding: 'utf-8' });
+      const metaDataObject = { alias: cam.alias, ip: cam.ip, user: cam.user, isAlarmed: false };
+      fs.writeFileSync(metaDataPath, JSON.stringify(metaDataObject, undefined, 2), { encoding: 'utf-8' });
     }
   }
 

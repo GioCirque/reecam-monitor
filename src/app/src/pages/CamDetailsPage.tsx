@@ -1,5 +1,5 @@
 import { connect } from 'react-redux';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import APIActions from '../redux/apiRedux';
 import MessageActions from '../redux/messageRedux';
 import { Navigate, useParams } from 'react-router-dom';
@@ -28,6 +28,7 @@ type Props = {
   user: AppUser;
   data: AppData;
   fetching: boolean;
+  loadData: () => void;
   notify: (message: string, color: string) => void;
   deleteEvent: (camAlias: string, eventId: string, password: string) => void;
 };
@@ -40,6 +41,7 @@ type DeleteState = {
 
 function CamDetailsPage(props: Props) {
   const { alias } = useParams();
+  const { data, user, deleteEvent, notify, loadData } = props;
   const [streamEvent, setStreamEvent] = useState<IPCamEvent | null>(null);
   const [deleteState, setDeleteState] = useState<DeleteState | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -50,11 +52,18 @@ function CamDetailsPage(props: Props) {
     setModalOpen(false);
   };
 
-  const { data, user, deleteEvent, notify } = props;
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadData && loadData();
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   if (!user) return <Navigate to='/login' />;
   if (!data) return <Navigate to='/cams' />;
 
   const cam = data.find((cam) => cam.alias.toLocaleLowerCase() === alias?.toLocaleLowerCase());
+  if (!cam) return <Navigate to='/cams' />;
 
   const handleOnStream = (event: IPCamEvent) => {
     setStreamEvent(event);
@@ -126,6 +135,7 @@ const mapStateToProps = (state: any) => {
 
 const mapDispatchToProps = (dispatch: any) => {
   return {
+    loadData: () => dispatch(APIActions.loadData()),
     deleteEvent: (camAlias: string, eventId: string, password: string) =>
       dispatch(APIActions.deleteEvent(camAlias, eventId, password)),
     notify: (message: string, color: string) => dispatch(MessageActions.openSnackbarWithColor(message, 'error')),

@@ -1,8 +1,9 @@
 import { call, put } from 'redux-saga/effects';
+
+import { API } from '../utils/api';
+import { AppData } from '../types';
 import APIActions from '../redux/apiRedux';
 import MessageActions from '../redux/messageRedux';
-import { AppData } from '../types';
-import { API } from '../utils/api';
 
 export function* loadData() {
   try {

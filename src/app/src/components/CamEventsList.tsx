@@ -1,9 +1,24 @@
 import React from 'react';
-import { formatDistanceToNow, format } from 'date-fns';
+import { format } from 'date-fns';
 import { createStyles, makeStyles } from '@mui/styles';
-import { Theme, Card, CardHeader, CardActions, CardMedia, Typography, Grid, Button } from '@mui/material';
+import { Theme, Card, CardHeader, CardActions, CardMedia, Typography, Grid, Button, Chip } from '@mui/material';
+import {
+  NotificationsActiveOutlined as ActiveIcon,
+  DownloadingOutlined as DownloadingIcon,
+  CheckCircleOutline as DownloadedIcon,
+  VideoSettingsOutlined as EncodingIcon,
+  VideoLibraryOutlined as EncodedIcon,
+} from '@mui/icons-material';
 
 import { IPCamMetaData, IPCamEvent } from '../types';
+
+const EventStageIcons: { [key: string]: React.ReactElement } = {
+  Active: <ActiveIcon />,
+  Downloading: <DownloadingIcon />,
+  Downloaded: <DownloadedIcon />,
+  Encoding: <EncodingIcon />,
+  Encoded: <EncodedIcon />,
+};
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -34,31 +49,29 @@ type ItemProps = {
 function CamEventListCard(props: ItemProps) {
   const { event, classes, onStream, onDelete } = props;
   const eventId = event.id.toString();
-  const title = (() => {
-    try {
-      let result = formatDistanceToNow(event.start, { addSuffix: true });
-      result = result[0].toLocaleUpperCase() + result.substring(1);
-      return result;
-    } catch (e) {
-      console.log(e);
-    }
-    return 'Console Error';
-  })();
+  const title = event.elapsed;
   const subtitle = format(event.start, 'PPpp');
+
   return (
     <Card className={classes.root}>
       <CardHeader title={title} subheader={subtitle} />
       <CardMedia className={classes.media} image={event.gif} title={`Cam event from ${subtitle}`} />
       <CardActions>
-        <Button size='small' onClick={() => onStream(event)}>
-          Stream
-        </Button>
-        <Button size='small' onClick={() => window.open(event.video)}>
-          Download
-        </Button>
-        <Button size='small' color='error' onClick={() => onDelete(eventId)}>
-          Delete
-        </Button>
+        {event.hasVid ? (
+          <>
+            <Button size='small' onClick={() => onStream(event)}>
+              Stream
+            </Button>
+            <Button size='small' onClick={() => window.open(event.video)}>
+              Download
+            </Button>
+            <Button size='small' color='error' onClick={() => onDelete(eventId)}>
+              Delete
+            </Button>
+          </>
+        ) : (
+          <Chip icon={EventStageIcons[event.stageName]} label={event.stageName} variant='outlined' />
+        )}
       </CardActions>
     </Card>
   );
