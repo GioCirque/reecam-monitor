@@ -144,7 +144,7 @@ export class Capturer {
     for (const event of events) {
       const camEventPath = makeLocalEventPath(event);
       const metadataFilePath = path.resolve(camEventPath, 'metadata.json');
-      const elapsed = msToTime(differenceInMilliseconds(event.start, event.stop));
+      const elapsed = msToTime(Math.abs(differenceInMilliseconds(event.start, event.stop)));
       const eventMetadata = {
         elapsed,
         start: event.start,
