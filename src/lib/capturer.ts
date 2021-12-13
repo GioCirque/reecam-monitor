@@ -74,7 +74,7 @@ export class Capturer {
   addEvent(params: CamParams, start: Date) {
     const { camId, alarmSeconds } = params;
     this.captureData.captures[camId] = this.captureData.captures[camId] || [];
-    const [existIndex, existing] = this.findExtensibleCapture(camId, start, alarmSeconds);
+    const [existIndex, existing] = this.findExtensibleCapture(camId, start);
     if (existIndex >= 0 && existing) {
       existing.stage = CaptureStage.Active;
       existing.stop = addSeconds(start, alarmSeconds);
@@ -392,14 +392,8 @@ export class Capturer {
     }
   }
 
-  private findExtensibleCapture(
-    camAlias: string,
-    start: Date,
-    camAlarmSeconds: number
-  ): [number, CaptureEvent | undefined] {
-    const index = this.captureData.captures[camAlias]?.findIndex(
-      (c) => Math.abs(differenceInSeconds(c.start, start)) <= camAlarmSeconds
-    );
+  private findExtensibleCapture(camAlias: string, start: Date): [number, CaptureEvent | undefined] {
+    const index = this.captureData.captures[camAlias]?.findIndex((c) => start >= c.start && start <= c.stop);
     return [index, index >= 0 ? this.captureData.captures[camAlias][index] : undefined];
   }
 
