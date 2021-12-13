@@ -87,7 +87,7 @@ export class Capturer {
         frames: 0,
         isGifFinal: false,
         stage: CaptureStage.Active,
-        stop: addSeconds(start, alarmSeconds),
+        stop: addSeconds(start, alarmSeconds * 2),
       } as CaptureEvent);
     }
     this.writeCaptureData();
