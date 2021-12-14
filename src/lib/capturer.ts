@@ -3,7 +3,7 @@ import path from 'path';
 import Jimp from 'jimp';
 import GIFEncoder from 'gifencoder';
 import { Canvas, createCanvas, loadImage } from 'canvas';
-import { addSeconds, differenceInMilliseconds, differenceInSeconds } from 'date-fns';
+import { addSeconds, differenceInMilliseconds } from 'date-fns';
 
 import { IPCam } from './reecam';
 import { Config } from './config';
