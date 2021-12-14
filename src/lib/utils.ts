@@ -252,8 +252,9 @@ export function canDownload(record: IPCamSearchRecord, event: CaptureEvent): boo
   const isRecordCovering = record.start_time <= event.start && record.end_time >= event.stop;
   const isStartInRecord = event.start >= record.start_time && event.start <= record.end_time;
   const isStopInRecord = event.stop >= record.start_time && event.stop <= record.end_time;
+  const recordInEvent = event.start <= record.start_time && record.end_time <= event.stop;
 
-  return !isIncluded && (isRecordCovering || isStartInRecord || isStopInRecord);
+  return !isIncluded && (isRecordCovering || isStartInRecord || isStopInRecord || recordInEvent);
 }
 
 /**
