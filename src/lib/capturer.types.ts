@@ -18,6 +18,7 @@ export type CamParams = { camId: string; camIp: string; alarmSeconds: number };
 export type CaptureEvent = {
   stop: Date;
   start: Date;
+  until: Date;
   stage: CaptureStage;
   frames: number;
   params: CamParams;

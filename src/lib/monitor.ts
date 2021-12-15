@@ -62,7 +62,7 @@ export class CamMonitor {
   }
 
   private async handleAlarmChanges(camAlarms: IPCamAlarm[]): Promise<void> {
-    const now = addSeconds(new Date(), -30); // Time travel back 1 minute before it happened
+    const now = new Date();
     for (const camAlarm of camAlarms.filter((c) => c.isAlarmed)) {
       const params: CamParams = {
         camIp: camAlarm.cam.ip,

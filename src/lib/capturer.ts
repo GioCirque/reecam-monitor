@@ -3,7 +3,7 @@ import path from 'path';
 import Jimp from 'jimp';
 import GIFEncoder from 'gifencoder';
 import { Canvas, createCanvas, loadImage } from 'canvas';
-import { addSeconds, differenceInMilliseconds } from 'date-fns';
+import { addSeconds, addMinutes, differenceInMilliseconds } from 'date-fns';
 
 import { IPCam } from './reecam';
 import { Config } from './config';
@@ -30,6 +30,12 @@ const GIF_DIMS_SMALL = true;
 const GIF_DIMS_720P = { width: 1280, height: 720 };
 const GIF_DIMS_1080P = { width: 1920, height: 1080 };
 const GIF_DIMS = GIF_DIMS_SMALL ? GIF_DIMS_720P : GIF_DIMS_1080P;
+const END_CAP_SECONDS = Number.isInteger(process.env.REECAM_END_CAP_SEC)
+  ? parseInt(process.env.REECAM_END_CAP_SEC)
+  : 30;
+const RELAPSE_MINUTES = Number.isInteger(process.env.REECAM_RELAPSE_MIN)
+  ? parseInt(process.env.REECAM_RELAPSE_MIN)
+  : 10;
 
 type RCEKeyType = keyof RuntimeCaptureEvent;
 export class Capturer {
@@ -71,23 +77,27 @@ export class Capturer {
     this.findExtensibleCapture = this.findExtensibleCapture.bind(this);
   }
 
-  addEvent(params: CamParams, start: Date) {
+  addEvent(params: CamParams, startTime: Date) {
+    const start = addSeconds(startTime, -END_CAP_SECONDS);
     const { camId, alarmSeconds } = params;
     this.captureData.captures[camId] = this.captureData.captures[camId] || [];
     const [existIndex, existing] = this.findExtensibleCapture(camId, start);
     if (existIndex >= 0 && existing) {
       existing.stage = CaptureStage.Active;
       existing.stop = addSeconds(start, alarmSeconds);
+      existing.until = addMinutes(existing.stop, RELAPSE_MINUTES);
       this.captureData.captures[camId].splice(existIndex, 1, existing);
     } else {
+      const stop = addSeconds(start, alarmSeconds + END_CAP_SECONDS);
       this.captureData.captures[camId].push({
+        stop,
         start,
         params,
         files: [],
         frames: 0,
         isGifFinal: false,
         stage: CaptureStage.Active,
-        stop: addSeconds(start, alarmSeconds * 2),
+        until: addMinutes(stop, RELAPSE_MINUTES),
       } as CaptureEvent);
     }
     this.writeCaptureData();
@@ -393,7 +403,7 @@ export class Capturer {
   }
 
   private findExtensibleCapture(camAlias: string, start: Date): [number, CaptureEvent | undefined] {
-    const index = this.captureData.captures[camAlias]?.findIndex((c) => start >= c.start && start <= c.stop);
+    const index = this.captureData.captures[camAlias]?.findIndex((c) => start >= c.start && start <= c.until);
     return [index, index >= 0 ? this.captureData.captures[camAlias][index] : undefined];
   }
 
