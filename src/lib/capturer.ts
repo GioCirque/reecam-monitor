@@ -26,10 +26,14 @@ import {
 import { CamParams, CaptureEvent, CaptureEventFile, CaptureStage, RuntimeCaptureEvent } from './capturer.types';
 
 const MAX_FRAME_COUNT = 60;
+
+const GIF_DIMS_TINY = true;
 const GIF_DIMS_SMALL = true;
+const GIF_DIMS_480P = { width: 720, height: 480 };
 const GIF_DIMS_720P = { width: 1280, height: 720 };
 const GIF_DIMS_1080P = { width: 1920, height: 1080 };
-const GIF_DIMS = GIF_DIMS_SMALL ? GIF_DIMS_720P : GIF_DIMS_1080P;
+const GIF_DIMS = GIF_DIMS_SMALL ? (GIF_DIMS_TINY ? GIF_DIMS_480P : GIF_DIMS_720P) : GIF_DIMS_1080P;
+
 const END_CAP_SECONDS = Number.isInteger(process.env.REECAM_END_CAP_SEC)
   ? parseInt(process.env.REECAM_END_CAP_SEC)
   : 30;

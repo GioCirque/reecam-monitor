@@ -5,6 +5,7 @@ import { Config } from '../lib/config';
 import { IPCamEvent, IPCamMetaData } from './api.types';
 
 const DEFAULT_SNAPSHOT_FILE = path.resolve(__dirname, '..', 'assets', 'snapshot.png');
+const RECYCLE_BIN_PATH = path.resolve(Config.storagePath, 'recycle-bin.json');
 
 function getCamDirs(): fs.Dirent[] {
   return fs.readdirSync(Config.mediaPath, { withFileTypes: true }).filter((entry) => {
@@ -12,14 +13,16 @@ function getCamDirs(): fs.Dirent[] {
   });
 }
 
-function getCamEvents(camPath: string, alias: string): IPCamEvent[] {
+function getCamEvents(camPath: string, alias: string, camId: string): IPCamEvent[] {
+  const recycleBin = getRecycleBin();
   const camEventPath = path.resolve(Config.mediaPath, camPath);
   return fs
     .readdirSync(camEventPath, { withFileTypes: true })
     .filter((entry) => {
+      const recycleId = makeRecycleId(camId, entry.name);
       const gifPath = path.resolve(camEventPath, entry.name, 'event.gif');
       const isMatch = entry.isDirectory() && !Number.isNaN(entry.name) && fs.existsSync(gifPath);
-      return isMatch;
+      return isMatch && !recycleBin.includes(recycleId);
     })
     .map((entry) => {
       const epoch = parseInt(entry.name);
@@ -45,7 +48,7 @@ function getCamMetas(): IPCamMetaData[] {
     meta.alias = meta.alias.replace(/\s+/g, '-');
     meta.details = `/api/cams/${meta.alias}`;
     meta.snapshot = `/api/cams/${meta.alias}/snapshot`;
-    meta.events = getCamEvents(entry.name, meta.alias);
+    meta.events = getCamEvents(entry.name, meta.alias, entry.name);
     return meta;
   });
 }
@@ -78,10 +81,23 @@ export function getCamsList(idFilter?: string): IPCamMetaData[] {
   return getCamMetas().filter((meta) => !idFilter || meta.alias === idFilter || meta.ip === idFilter);
 }
 
+function makeRecycleId(camId: string, eventId: string) {
+  return [camId, eventId].join('-');
+}
+
+function getRecycleBin(): string[] {
+  return JSON.parse(fs.readFileSync(RECYCLE_BIN_PATH, 'utf-8')) as string[];
+}
+
+function softDeleteEvent(camId: string, eventId: string): void {
+  fs.writeFileSync(RECYCLE_BIN_PATH, JSON.stringify(getRecycleBin().concat(makeRecycleId(camId, eventId))), {
+    encoding: 'utf-8',
+  });
+}
+
 export function deleteCamEvent(idFilter: string, eventId: string) {
   const camId = getCamMetas()
     .filter((meta) => !idFilter || meta.alias === idFilter || meta.ip === idFilter)
     .shift().id;
-  const eventPath = path.resolve(Config.mediaPath, camId, eventId);
-  fs.rmSync(eventPath, { recursive: true, force: true });
+  softDeleteEvent(camId, eventId);
 }
