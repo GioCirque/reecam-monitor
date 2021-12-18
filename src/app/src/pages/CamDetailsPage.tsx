@@ -6,11 +6,12 @@ import { Navigate, useParams } from 'react-router-dom';
 import { Grid, Typography, Modal, Box } from '@mui/material';
 import { Home as HomeIcon, Camera as CameraIcon, CameraIndoor as CamIcon } from '@mui/icons-material';
 
+import { getBasename } from '../utils/functions';
+import useMobileService from '../utils/mobileService';
 import CamEventsList from '../components/CamEventsList';
 import { AppData, AppUser, IPCamEvent } from '../types';
 import { ConfirmDelete } from '../components/ConfirmDelete';
 import Page, { BreadcrumbDef } from '../components/Layout/Page';
-import { getBasename } from '../utils/functions';
 
 const modalStyle = {
   position: 'absolute' as 'absolute',
@@ -40,6 +41,7 @@ type DeleteState = {
 };
 
 function CamDetailsPage(props: Props) {
+  const isMobile = useMobileService();
   const { alias } = useParams();
   const { data, user, deleteEvent, notify, loadData } = props;
   const [streamEvent, setStreamEvent] = useState<IPCamEvent | null>(null);
@@ -67,8 +69,12 @@ function CamDetailsPage(props: Props) {
   if (!cam) return <Navigate to='/cams' />;
 
   const handleOnStream = (event: IPCamEvent) => {
-    setStreamEvent(event);
-    openModal();
+    if (isMobile) {
+      window.open(event.stream, '_blank');
+    } else {
+      setStreamEvent(event);
+      openModal();
+    }
   };
 
   const handleVideoError = (event: React.SyntheticEvent<HTMLVideoElement, Event>) => {
