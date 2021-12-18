@@ -86,6 +86,9 @@ function makeRecycleId(camId: string, eventId: string) {
 }
 
 function getRecycleBin(): string[] {
+  if (!fs.existsSync(RECYCLE_BIN_PATH)) {
+    fs.writeFileSync(RECYCLE_BIN_PATH, JSON.stringify([]), { encoding: 'utf-8' });
+  }
   return JSON.parse(fs.readFileSync(RECYCLE_BIN_PATH, 'utf-8')) as string[];
 }
 
