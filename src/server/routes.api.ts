@@ -36,7 +36,7 @@ export const registerApi = (app: express.Application): express.Application => {
     .get('/api/cams/:camId', (req, res) => {
       res.json(getCamsList(req.params.camId as string).shift());
     })
-    .get('/api/cams/:camId/snapshot', (req, res) => {
+    .get('/api/cams/:camId/snapshot.jpeg', (req, res) => {
       const { camId } = req.params;
       const [data, type] = getCamSnapshot(camId);
       const ext = type.split('/').pop();
@@ -46,7 +46,7 @@ export const registerApi = (app: express.Application): express.Application => {
         .set('Content-Disposition', `attachment; filename="snapshot-${Date.now()}.${ext}"`)
         .send(data);
     })
-    .get('/api/cams/:camId/:eventId(\\d+)/:assetType(gif|video)', (req, res) => {
+    .get('/api/cams/:camId/:eventId(\\d+)/:assetType(event.gif|video.mp4)', (req, res) => {
       const { camId, eventId, assetType } = req.params;
       if (assetType !== 'gif' && assetType !== 'video') {
         res.status(400).send('Invalid asset type provided. Must be gif or video.');
@@ -59,7 +59,7 @@ export const registerApi = (app: express.Application): express.Application => {
         .set('Content-Disposition', `attachment; filename="${camId}-${eventId}.${type.split('/').pop()}"`)
         .send(data);
     })
-    .all('/api/cams/:camId/:eventId(\\d+)/stream', (req, res) => {
+    .all('/api/cams/:camId/:eventId(\\d+)/stream.mp4', (req, res) => {
       const { camId, eventId } = req.params;
       const [streamFilePath, mimeType] = getCamEventAssetPath(camId, eventId, 'video');
       fs.stat(streamFilePath, (err, stats) => {
@@ -70,7 +70,7 @@ export const registerApi = (app: express.Application): express.Application => {
           }
           res.end(err);
         }
-        const range = req.headers.range;
+        const range = req.headers.range || 'bytes=0-1024';
         if (!range) {
           // 416 Wrong range
           return res.sendStatus(416);

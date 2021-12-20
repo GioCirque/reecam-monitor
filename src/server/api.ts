@@ -32,9 +32,9 @@ function getCamEvents(camPath: string, alias: string, camId: string): IPCamEvent
         id: epoch,
         stop: new Date(metadata.stop).valueOf(),
         start: new Date(metadata.start).valueOf(),
-        gif: `/api/cams/${alias}/${epoch}/gif`,
-        video: `/api/cams/${alias}/${epoch}/video`,
-        stream: `/api/cams/${alias}/${epoch}/stream`,
+        gif: `/api/cams/${alias}/${epoch}/event.gif`,
+        video: `/api/cams/${alias}/${epoch}/video.mp4`,
+        stream: `/api/cams/${alias}/${epoch}/stream.mp4`,
       } as IPCamEvent;
     });
 }
@@ -47,7 +47,7 @@ function getCamMetas(): IPCamMetaData[] {
     meta.id = entry.name;
     meta.alias = meta.alias.replace(/\s+/g, '-');
     meta.details = `/api/cams/${meta.alias}`;
-    meta.snapshot = `/api/cams/${meta.alias}/snapshot`;
+    meta.snapshot = `/api/cams/${meta.alias}/snapshot.jpeg`;
     meta.events = getCamEvents(entry.name, meta.alias, entry.name);
     return meta;
   });
