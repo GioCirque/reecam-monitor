@@ -46,12 +46,13 @@ export const registerApi = (app: express.Application): express.Application => {
         .set('Content-Disposition', `attachment; filename="snapshot-${Date.now()}.${ext}"`)
         .send(data);
     })
-    .get('/api/cams/:camId/:eventId(\\d+)/:assetType(event.gif|video.mp4)', (req, res) => {
-      const { camId, eventId, assetType } = req.params;
-      if (assetType !== 'gif' && assetType !== 'video') {
+    .get('/api/cams/:camId/:eventId(\\d+)/:assetName(event.gif|video.mp4)', (req, res) => {
+      const { camId, eventId, assetName } = req.params;
+      if (assetName !== 'event.gif' && assetName !== 'video.mp4') {
         res.status(400).send('Invalid asset type provided. Must be gif or video.');
         return;
       }
+      const assetType = assetName === 'event.gif' ? 'gif' : 'video';
       const [data, type] = getCamEventAsset(camId, eventId, assetType);
       res
         .status(200)
