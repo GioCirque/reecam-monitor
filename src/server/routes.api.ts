@@ -1,16 +1,20 @@
 import fs from 'fs';
-import express from 'express';
+import express, { Response } from 'express';
 import { Config } from '../lib/config';
 import { deleteCamEvent, getCamEventAsset, getCamEventAssetPath, getCamsList, getCamSnapshot } from './api';
+import { toEpoch } from 'src/lib/utils';
 
 export const registerApi = (app: express.Application): express.Application => {
+  const withHeaders = <T extends Response>(res: T): T => {
+    return res.header('Cache-Control', `private, max-age=4`);
+  };
   return app
     .use(express.json())
     .get('/api', (req, res) => {
-      res.json({ time: Date.now() });
+      withHeaders(res).json({ time: Date.now() });
     })
     .post('/api/logout', (req, res) => {
-      res.clearCookie('token').sendStatus(204);
+      withHeaders(res).clearCookie('token').sendStatus(204);
     })
     .post('/api/login', (req, res) => {
       try {
@@ -19,10 +23,10 @@ export const registerApi = (app: express.Application): express.Application => {
         const config = Config.readStoredConfigData();
         const cam = config.cams.find((cam) => cam.credentials.pwd === password);
         if (user && cam) {
-          const token = Buffer.from(JSON.stringify(user)).toString('base64');
           const expires = new Date();
           expires.setDate(expires.getDay() + 90);
-          res.cookie('token', token, { expires, httpOnly: false }).send(user);
+          const token = Buffer.from(JSON.stringify({ ...user, expires: toEpoch(expires) })).toString('base64');
+          withHeaders(res).cookie('token', token, { expires, httpOnly: false }).send(user);
         } else {
           res.status(403).send('Invalid credentials');
         }
@@ -31,10 +35,10 @@ export const registerApi = (app: express.Application): express.Application => {
       }
     })
     .get('/api/cams', (req, res) => {
-      res.json(getCamsList());
+      withHeaders(res).json(getCamsList());
     })
     .get('/api/cams/:camId', (req, res) => {
-      res.json(getCamsList(req.params.camId as string).shift());
+      withHeaders(res).json(getCamsList(req.params.camId as string).shift());
     })
     .get('/api/cams/:camId/snapshot.jpeg', (req, res) => {
       const { camId } = req.params;
@@ -82,7 +86,7 @@ export const registerApi = (app: express.Application): express.Application => {
         const end = positions[1] ? parseInt(positions[1], 10) : total - 1;
         const chunkSize = end - start + 1;
 
-        res.writeHead(206, {
+        withHeaders(res).writeHead(206, {
           'Accept-Ranges': 'bytes',
           'Content-Type': mimeType,
           'Content-Range': `bytes ${start}-${end}/${total}`,
@@ -107,7 +111,7 @@ export const registerApi = (app: express.Application): express.Application => {
       const { camId, eventId } = req.params;
       if (cam) {
         deleteCamEvent(camId, eventId);
-        res.status(200).json(getCamsList());
+        withHeaders(res).status(200).json(getCamsList());
       } else {
         res.sendStatus(403);
       }
