@@ -1,12 +1,13 @@
 import fs from 'fs';
 import express, { Response } from 'express';
+
 import { Config } from '../lib/config';
+import { toEpoch } from '../lib/utils';
 import { deleteCamEvent, getCamEventAsset, getCamEventAssetPath, getCamsList, getCamSnapshot } from './api';
-import { toEpoch } from 'src/lib/utils';
 
 export const registerApi = (app: express.Application): express.Application => {
-  const withHeaders = <T extends Response>(res: T): T => {
-    return res.header('Cache-Control', `private, max-age=4`);
+  const withHeaders = <T extends Response>(res: T, maxAgeSeconds = 4): T => {
+    return res.header('Cache-Control', `private, max-age=${maxAgeSeconds}`);
   };
   return app
     .use(express.json())
@@ -44,7 +45,7 @@ export const registerApi = (app: express.Application): express.Application => {
       const { camId } = req.params;
       const [data, type] = getCamSnapshot(camId);
       const ext = type.split('/').pop();
-      res
+      withHeaders(res, 240)
         .status(200)
         .set('Content-Type', type)
         .set('Content-Disposition', `attachment; filename="snapshot-${Date.now()}.${ext}"`)
