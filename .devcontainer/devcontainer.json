@@ -11,6 +11,7 @@
 	},
 	// Set *default* container specific settings.json values on container create.
 	"settings": {},
+	"onCreateCommand": "mkdir -p ~/.docker/cli-plugins && cp /docker/cli-plugins/docker-buildx ~/.docker/cli-plugins",
 	// Mounts accessible inside the container
 	"mounts": [
 		"source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
