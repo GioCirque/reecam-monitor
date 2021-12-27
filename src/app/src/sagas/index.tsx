@@ -1,4 +1,4 @@
-import { takeEvery, all, takeLatest } from 'redux-saga/effects';
+import { takeEvery, all, takeLatest, takeLeading } from 'redux-saga/effects';
 
 /* ------------- Types ------------- */
 import { AuthTypes } from '../redux/authRedux';
@@ -16,7 +16,7 @@ export default function* root() {
     takeLatest(AuthTypes.LOGIN, login),
     takeEvery(AuthTypes.LOGOUT, logout),
     // Data
-    takeLatest(APITypes.LOAD_DATA, loadData),
+    takeLeading(APITypes.LOAD_DATA, loadData),
     takeLatest(APITypes.DELETE_EVENT, deleteEvent),
   ]);
 }

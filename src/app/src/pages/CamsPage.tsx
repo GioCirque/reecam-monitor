@@ -22,7 +22,7 @@ function CamsPage(props: Props) {
   useEffect(() => {
     const interval = setInterval(() => {
       loadData && loadData();
-    }, 1000);
+    }, 2500);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

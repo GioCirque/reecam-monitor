@@ -1,7 +1,7 @@
 import { connect } from 'react-redux';
-import React, { useEffect, useState } from 'react';
 import APIActions from '../redux/apiRedux';
 import MessageActions from '../redux/messageRedux';
+import React, { useEffect, useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import { Grid, Typography, Modal, Box } from '@mui/material';
 import { Home as HomeIcon, Camera as CameraIcon, CameraIndoor as CamIcon } from '@mui/icons-material';
@@ -57,7 +57,7 @@ function CamDetailsPage(props: Props) {
   useEffect(() => {
     const interval = setInterval(() => {
       loadData && loadData();
-    }, 1000);
+    }, 2500);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -107,7 +107,7 @@ function CamDetailsPage(props: Props) {
     <Page breadcrumbs={breadcrumbs}>
       {cam && (
         <Grid container item justifyContent='center'>
-          <CamEventsList onDelete={onDeleteRequested} onStream={handleOnStream} cam={cam} />
+          <CamEventsList onDelete={onDeleteRequested} onStream={handleOnStream} cam={cam}/>
         </Grid>
       )}
       {!cam && (

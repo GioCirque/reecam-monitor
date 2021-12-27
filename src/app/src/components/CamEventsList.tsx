@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { createStyles, makeStyles } from '@mui/styles';
 import { Theme, Card, CardHeader, CardActions, CardMedia, Typography, Grid, Button, Chip } from '@mui/material';
@@ -25,6 +25,13 @@ const useStyles = makeStyles((theme: Theme) =>
     root: {
       width: '100%',
       maxWidth: '100vw',
+      marginBottom: '75px',
+      backgroundColor: theme.palette.background.paper,
+    },
+    pager: {
+      width: '100%',
+      maxWidth: '100vw',
+      marginTop: '75px',
       marginBottom: '75px',
       backgroundColor: theme.palette.background.paper,
     },
@@ -85,23 +92,31 @@ export type Props = {
 };
 
 export default function CamEventsList(props: Props) {
+  const pageSize = 4;
   const classes = useStyles();
   const itemClasses = useItemStyles();
   const { cam, onDelete, onStream } = props;
-  const events = [...props.cam.events].sort((a, b) => b.start - a.start);
+  const [eventCount, setEventCount] = useState(pageSize);
+  const events = [...props.cam.events].sort((a, b) => b.start - a.start).slice(0, eventCount);
 
   return (
     <Grid container direction='row' justifyContent='center' spacing={2} className={classes.root}>
-      {events.map((e) => (
-        <Grid item key={e.start.toString()}>
-          <CamEventListCard
-            event={e}
-            onStream={onStream}
-            classes={itemClasses}
-            onDelete={(eventId) => onDelete(cam.alias, eventId)}
-          />
-        </Grid>
-      ))}
+      {(events && events.length > 0) && (
+        <>
+          {events.map(e => (<Grid item key={e.id}>
+            <CamEventListCard
+              event={e}
+              onStream={onStream}
+              classes={itemClasses}
+              onDelete={(eventId) => onDelete(cam.alias, eventId)}
+            />
+          </Grid>))}
+          <Grid container justifyContent='center' className={classes.pager}>
+            <Button variant='contained' onClick={() => setEventCount(p => p + pageSize)} disabled={events.length >= props.cam.events.length}>Load Older Events</Button>
+            <Grid container justifyContent='center'><Typography>Showing {events.length} of {props.cam.events.length} events</Typography></Grid>
+          </Grid>
+        </>
+      )}
       {(!events || events.length === 0) && (
         <Grid item>
           <Typography gutterBottom component='h6'>

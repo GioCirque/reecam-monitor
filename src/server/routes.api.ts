@@ -2,7 +2,7 @@ import fs from 'fs';
 import express, { Response } from 'express';
 
 import { Config } from '../lib/config';
-import { toEpoch } from '../lib/utils';
+import { toEpoch, wait } from '../lib/utils';
 import { deleteCamEvent, getCamEventAsset, getCamEventAssetPath, getCamsList, getCamSnapshot } from './api';
 
 export const registerApi = (app: express.Application): express.Application => {
@@ -76,7 +76,7 @@ export const registerApi = (app: express.Application): express.Application => {
           }
           res.end(err);
         }
-        const range = req.headers.range || 'bytes=0-1024';
+        const range = req.headers.range;
         if (!range) {
           // 416 Wrong range
           return res.sendStatus(416);
