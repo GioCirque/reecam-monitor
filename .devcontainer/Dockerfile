@@ -8,14 +8,15 @@ FROM mcr.microsoft.com/vscode/devcontainers/base:0-alpine-${VARIANT}
 RUN set -ex
 
 # Install base dependencies
-RUN apk upgrade --no-cache \
-    && apk add --no-cache bash curl git jq openssh openssl sudo unzip nodejs \
-    npm yarn ffmpeg docker docker-cli python3 pkgconf make g++ pixman-dev cairo-dev \
-    pango-dev libjpeg-turbo-dev
+RUN apk update && apk upgrade --no-cache --available --latest --prune \
+    && apk add --no-cache bash curl git jq openssh openssl-dev gcc unzip nodejs \
+    npm yarn ffmpeg docker docker-cli docker-cli-buildx python3-dev py3-pip pkgconf \
+    make g++ pixman-dev cairo-dev pango-dev libjpeg-turbo-dev libffi-dev libc-dev \
+    libressl-dev musl-dev \
+    && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | -y | sh \
+    && pip install --upgrade pip \
+    && sudo pip install docker-compose \
+    && docker buildx install
 
-# Install buildx for docker
-RUN sudo mkdir -p /docker/cli-plugins \
-    && sudo curl -s https://api.github.com/repos/docker/buildx/releases/latest | jq '.assets[]|select(.name|endswith("linux-amd64"))|.browser_download_url' | xargs -n 1 curl -L -s -o /docker/cli-plugins/docker-buildx \
-    && sudo chmod a+x /docker/cli-plugins/docker-buildx && docker buildx install
-
-ENV PATH="/docker/cli-plugins:$PATH"
+ENV DOCKER_BUILDKIT=1
+ENV PATH="$HOME/.docker/cli-plugins:$PATH"

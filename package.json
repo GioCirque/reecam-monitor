@@ -13,7 +13,7 @@
     "move:app": "mkdir -p ./build/app/build && cp -fr ./src/app/build ./build/app/",
     "dockerize": "yarn build && yarn docker:build && echo \"Please push images from a local and authenticated device.\"",
     "docker:push": "sudo docker push -a giocirque/reecam-web",
-    "docker:build": "sudo docker build --platform=linux/amd64 --output=type=docker --rm -f Dockerfile -t giocirque/reecam-web:latest -t giocirque/reecam-web:$(git rev-parse --short HEAD) ."
+    "docker:build": "sudo docker build --platform=linux/amd64 --load --rm -f Dockerfile -t giocirque/reecam-web:latest -t giocirque/reecam-web:$(git rev-parse --short HEAD) ."
   },
   "bin": {
     "ipcams": "./src/cli/index.ts"
