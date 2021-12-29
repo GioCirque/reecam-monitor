@@ -15,9 +15,9 @@ RUN apk add --no-cache bash curl git jq openssh openssl-dev gcc unzip \
     libressl-dev musl-dev
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | -y | sh
 RUN pip install --upgrade pip
+RUN npm install -g canvas --unsafe-perm=true --allow-root
 COPY . /code
 WORKDIR /code
-RUN npm install -g canvas --unsafe-perm=true --allow-root
 RUN yarn reset
 RUN yarn build
 
