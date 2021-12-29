@@ -41,7 +41,8 @@
 		"mhutchie.git-graph",
 		"streetsidesoftware.code-spell-checker",
 		"ms-azure-devops.azure-pipelines",
-		"ms-vscode.azure-account"
+		"ms-vscode.azure-account",
+		"ms-azuretools.vscode-docker"
 	],
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],

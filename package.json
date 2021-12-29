@@ -11,7 +11,7 @@
     "express": "cd ./build/server && npm init -y && npm install --production --no-optional --no-save --prefix . express",
     "start": "yarn build && sudo docker compose up --build --detach",
     "move:app": "mkdir -p ./build/app/build && cp -fr ./src/app/build ./build/app/",
-    "dockerize": "yarn build && yarn docker:build && echo \"Please push images from a local and authenticated device.\"",
+    "dockerize": "yarn docker:build && echo \"Please push images from a local and authenticated device.\"",
     "docker:push": "sudo docker push -a giocirque/reecam-web",
     "docker:build": "sudo docker build --platform=linux/amd64 --load --rm -f Dockerfile -t giocirque/reecam-web:latest -t giocirque/reecam-web:$(git rev-parse --short HEAD) ."
   },

@@ -1,5 +1,6 @@
 Dockerfile
 node_modules
+build
 .ipcams
 .jest
 .vscode
@@ -8,3 +9,5 @@ node_modules
 .eslint
 .gitignore
 .nvmrc
+.webpack
+.devcontainer
